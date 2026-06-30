@@ -1,0 +1,35 @@
+/**
+ * Badge — indicador visual de estado.
+ * variant: 'success' | 'danger' | 'warning' | 'info' | 'default' | 'premium' | 'estudiante'
+ */
+export function Badge({ variant = 'default', children, className = '' }) {
+  const variants = {
+    success:    'bg-green-100 text-green-800',
+    danger:     'bg-red-100 text-red-800',
+    warning:    'bg-amber-100 text-amber-800',
+    info:       'bg-blue-100 text-blue-800',
+    default:    'bg-slate-100 text-slate-700',
+    premium:    'bg-purple-100 text-purple-800',
+    estudiante: 'bg-cyan-100 text-cyan-800',
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${variants[variant] ?? variants.default} ${className}`}
+    >
+      {children}
+    </span>
+  )
+}
+
+/**
+ * DotBadge — indicador compacto con punto de color.
+ */
+export function DotBadge({ available, count }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${available ? 'text-green-700' : 'text-red-600'}`}>
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${available ? 'bg-green-500' : 'bg-red-500'}`} />
+      {available ? `${count} disponible${count !== 1 ? 's' : ''}` : 'No disponible'}
+    </span>
+  )
+}
