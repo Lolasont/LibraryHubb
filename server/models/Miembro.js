@@ -9,7 +9,7 @@ const miembroSchema = new Schema(
     email:           { type: String, trim: true, lowercase: true, default: null },
     direccion:       { type: String, default: null },
     telefono:        { type: String, default: null },
-    tipo_membresia:  { type: String, enum: ['basica', 'premium', 'estudiante'], default: 'basica' },
+    tipo_membresia:  { type: String, enum: ['basica', 'premium', 'estudiante', null], default: null },
     estado:          { type: String, enum: ['activo', 'suspendido', 'cancelado'],  default: 'activo' },
     rol:             { type: String, enum: ['miembro', 'bibliotecario'],            default: 'miembro' },
     fecha_registro:  { type: Date, default: Date.now },
