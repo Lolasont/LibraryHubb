@@ -4,7 +4,6 @@ import {getLibroById, getReservasByLibro } from '../../data/mockService'
 export default function LibroDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
-
   const libro = getLibroById(id)
   const reservas = getReservasByLibro(id)
 
