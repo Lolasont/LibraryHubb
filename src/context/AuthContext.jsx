@@ -12,14 +12,18 @@ export function AuthProvider({ children }) {
     }
   })
 
-  const login = (userData) => {
+  // Guarda el usuario Y el JWT token
+  const login = (userData, token) => {
     setUser(userData)
     localStorage.setItem('libraryhub_user', JSON.stringify(userData))
+    localStorage.setItem('libraryhub_token', token)
   }
 
+  // Limpia usuario y token
   const logout = () => {
     setUser(null)
     localStorage.removeItem('libraryhub_user')
+    localStorage.removeItem('libraryhub_token')
   }
 
   return (

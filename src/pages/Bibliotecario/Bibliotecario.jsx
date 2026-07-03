@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   getTodosPrestamos,
   getTodasReservas,
@@ -6,23 +6,18 @@ import {
   getMiembros,
   registrarDevolucion,
   getEstadoPrestamo,
-} from '../../data/mockService'
+} from '../../data/apiService'
 import { Badge } from '../../components/ui/Badge'
 import { EmptyState } from '../../components/ui/EmptyState'
+import { Spinner } from '../../components/ui/Spinner'
 import { Toast } from '../../components/ui/Toast'
 import { useToast } from '../../hooks/useToast'
 import { formatDate, formatCLP, getMembresiaInfo } from '../../data/utils'
 import {
-  ClipboardDocumentListIcon,
-  BookmarkIcon,
-  BanknotesIcon,
-  UsersIcon,
-  CheckIcon,
-  ExclamationTriangleIcon,
-  ClockIcon,
+  ClipboardDocumentListIcon, BookmarkIcon, BanknotesIcon,
+  UsersIcon, CheckIcon, ExclamationTriangleIcon, ClockIcon,
 } from '@heroicons/react/24/outline'
 
-// ── Tabs ─────────────────────────────────────────────────────
 const TABS = [
   { id: 'prestamos', label: 'Préstamos',  icon: ClipboardDocumentListIcon },
   { id: 'reservas',  label: 'Reservas',   icon: BookmarkIcon              },
@@ -30,16 +25,14 @@ const TABS = [
   { id: 'miembros',  label: 'Miembros',   icon: UsersIcon                 },
 ]
 
-// ── Tarjeta de métrica ────────────────────────────────────────
 function MetricaCard({ label, value, icon: Icon, color }) {
   const colors = {
-    blue:   { bg: 'bg-blue-50',   icon: 'text-blue-600',   val: 'text-blue-900'  },
-    red:    { bg: 'bg-red-50',    icon: 'text-red-500',    val: 'text-red-800'   },
-    amber:  { bg: 'bg-amber-50',  icon: 'text-amber-600',  val: 'text-amber-900' },
-    slate:  { bg: 'bg-slate-50',  icon: 'text-slate-500',  val: 'text-slate-800' },
+    blue:  { bg: 'bg-blue-50',  icon: 'text-blue-600',  val: 'text-blue-900'  },
+    red:   { bg: 'bg-red-50',   icon: 'text-red-500',   val: 'text-red-800'   },
+    amber: { bg: 'bg-amber-50', icon: 'text-amber-600', val: 'text-amber-900' },
+    slate: { bg: 'bg-slate-50', icon: 'text-slate-500', val: 'text-slate-800' },
   }
   const c = colors[color] ?? colors.blue
-
   return (
     <div className="card p-5 flex items-center gap-4">
       <div className={`w-10 h-10 ${c.bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
@@ -53,7 +46,6 @@ function MetricaCard({ label, value, icon: Icon, color }) {
   )
 }
 
-// ── Badge de estado de préstamo ───────────────────────────────
 function EstadoBadge({ prestamo }) {
   const estado = getEstadoPrestamo(prestamo)
   if (estado === 'vencido') return <Badge variant="danger">Vencido</Badge>
@@ -61,23 +53,16 @@ function EstadoBadge({ prestamo }) {
   return <Badge variant="success">Al día</Badge>
 }
 
-// ── Tab: Préstamos ────────────────────────────────────────────
 function TabPrestamos({ prestamos, onDevolucion }) {
-  if (prestamos.length === 0) {
-    return <EmptyState icon="✅" title="No hay préstamos activos" />
-  }
-
+  if (prestamos.length === 0) return <EmptyState icon="✅" title="No hay préstamos activos" />
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-5">Libro</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Miembro ID</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Fecha préstamo</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Vencimiento</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Estado</th>
-            <th className="py-3 px-5" />
+            {['Libro', 'Miembro', 'Fecha préstamo', 'Vencimiento', 'Estado', ''].map(h => (
+              <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-4">{h}</th>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
@@ -85,22 +70,16 @@ function TabPrestamos({ prestamos, onDevolucion }) {
             const estado = getEstadoPrestamo(p)
             return (
               <tr key={p.id} className={`hover:bg-slate-50 transition-colors ${estado === 'vencido' ? 'bg-red-50/30' : ''}`}>
-                <td className="py-3 px-5 font-medium text-slate-800 max-w-[200px]">
-                  <span className="line-clamp-1">{p.libro_titulo}</span>
-                </td>
-                <td className="py-3 px-3 text-slate-500">#{p.miembro_id}</td>
-                <td className="py-3 px-3 text-slate-500">{formatDate(p.fecha_prestamo)}</td>
-                <td className="py-3 px-3 text-slate-500">{formatDate(p.fecha_devolucion_esperada)}</td>
-                <td className="py-3 px-3">
-                  <EstadoBadge prestamo={p} />
-                </td>
-                <td className="py-3 px-5">
-                  <button
-                    onClick={() => onDevolucion(p.id)}
+                <td className="py-3 px-4 font-medium text-slate-800 max-w-[180px]"><span className="line-clamp-1">{p.libro_titulo}</span></td>
+                <td className="py-3 px-4 text-slate-500">#{p.miembro_id}</td>
+                <td className="py-3 px-4 text-slate-500">{formatDate(p.fecha_prestamo)}</td>
+                <td className="py-3 px-4 text-slate-500">{formatDate(p.fecha_devolucion_esperada)}</td>
+                <td className="py-3 px-4"><EstadoBadge prestamo={p} /></td>
+                <td className="py-3 px-4">
+                  <button onClick={() => onDevolucion(p.id)}
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-lg transition-colors"
                   >
-                    <CheckIcon className="w-3.5 h-3.5" />
-                    Registrar devolución
+                    <CheckIcon className="w-3.5 h-3.5" />Registrar devolución
                   </button>
                 </td>
               </tr>
@@ -112,41 +91,32 @@ function TabPrestamos({ prestamos, onDevolucion }) {
   )
 }
 
-// ── Tab: Reservas ─────────────────────────────────────────────
 function TabReservas({ reservas }) {
-  if (reservas.length === 0) {
-    return <EmptyState icon="🔖" title="No hay reservas activas" />
-  }
-
+  if (reservas.length === 0) return <EmptyState icon="🔖" title="No hay reservas activas" />
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-5">Libro</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Miembro ID</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Posición</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Fecha reserva</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Disponible aprox.</th>
+            {['Libro', 'Miembro', 'Posición', 'Fecha reserva', 'Disponible aprox.'].map(h => (
+              <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-4">{h}</th>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
           {reservas.map(r => (
             <tr key={r.id} className="hover:bg-slate-50 transition-colors">
-              <td className="py-3 px-5 font-medium text-slate-800 max-w-[200px]">
-                <span className="line-clamp-1">{r.libro_titulo}</span>
-              </td>
-              <td className="py-3 px-3 text-slate-500">#{r.miembro_id}</td>
-              <td className="py-3 px-3">
+              <td className="py-3 px-4 font-medium text-slate-800 max-w-[180px]"><span className="line-clamp-1">{r.libro_titulo}</span></td>
+              <td className="py-3 px-4 text-slate-500">#{r.miembro_id}</td>
+              <td className="py-3 px-4">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
                   #{r.posicion_cola} en cola
                 </span>
               </td>
-              <td className="py-3 px-3 text-slate-500">{formatDate(r.fecha_reserva)}</td>
-              <td className="py-3 px-3 text-slate-500">
+              <td className="py-3 px-4 text-slate-500">{formatDate(r.fecha_reserva)}</td>
+              <td className="py-3 px-4">
                 <span className="flex items-center gap-1.5 text-amber-700">
-                  <ClockIcon className="w-3.5 h-3.5" />
-                  {formatDate(r.fecha_estimada_disponibilidad)}
+                  <ClockIcon className="w-3.5 h-3.5" />{formatDate(r.fecha_estimada_disponibilidad)}
                 </span>
               </td>
             </tr>
@@ -157,37 +127,28 @@ function TabReservas({ reservas }) {
   )
 }
 
-// ── Tab: Multas ───────────────────────────────────────────────
 function TabMultas({ multas }) {
-  if (multas.length === 0) {
-    return <EmptyState icon="💚" title="No hay multas pendientes" />
-  }
-
+  if (multas.length === 0) return <EmptyState icon="💚" title="No hay multas pendientes" />
   const total = multas.reduce((s, m) => s + m.monto, 0)
-
   return (
     <div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-100">
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-5">ID Multa</th>
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Préstamo</th>
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Miembro ID</th>
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Monto (CLP)</th>
-              <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Estado</th>
+              {['ID Multa', 'Préstamo', 'Miembro', 'Monto (CLP)', 'Estado'].map(h => (
+                <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-4">{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
             {multas.map(m => (
               <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                <td className="py-3 px-5 text-slate-500">#{m.id}</td>
-                <td className="py-3 px-3 text-slate-500">Préstamo #{m.prestamo_id}</td>
-                <td className="py-3 px-3 text-slate-500">#{m.miembro_id}</td>
-                <td className="py-3 px-3 font-semibold text-red-700">{formatCLP(m.monto)}</td>
-                <td className="py-3 px-3">
-                  <Badge variant="danger">Pendiente</Badge>
-                </td>
+                <td className="py-3 px-4 text-slate-500">#{m.id}</td>
+                <td className="py-3 px-4 text-slate-500">#{m.prestamo_id}</td>
+                <td className="py-3 px-4 text-slate-500">#{m.miembro_id}</td>
+                <td className="py-3 px-4 font-semibold text-red-700">{formatCLP(m.monto)}</td>
+                <td className="py-3 px-4"><Badge variant="danger">Pendiente</Badge></td>
               </tr>
             ))}
           </tbody>
@@ -201,22 +162,16 @@ function TabMultas({ multas }) {
   )
 }
 
-// ── Tab: Miembros ─────────────────────────────────────────────
 function TabMiembros({ miembros }) {
-  if (miembros.length === 0) {
-    return <EmptyState icon="👥" title="No hay miembros registrados" />
-  }
-
+  if (miembros.length === 0) return <EmptyState icon="👥" title="No hay miembros registrados" />
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-5">Nombre</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Cédula</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Email</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Membresía</th>
-            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-3">Estado</th>
+            {['Nombre', 'Cédula', 'Email', 'Membresía', 'Estado'].map(h => (
+              <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-4">{h}</th>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
@@ -224,7 +179,7 @@ function TabMiembros({ miembros }) {
             const { label, variant } = getMembresiaInfo(m.tipo_membresia)
             return (
               <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                <td className="py-3 px-5">
+                <td className="py-3 px-4">
                   <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-800">
                       {m.nombre.charAt(0)}
@@ -232,12 +187,10 @@ function TabMiembros({ miembros }) {
                     <span className="font-medium text-slate-800">{m.nombre}</span>
                   </div>
                 </td>
-                <td className="py-3 px-3 text-slate-500 font-mono text-xs">{m.cedula}</td>
-                <td className="py-3 px-3 text-slate-500">{m.email ?? '—'}</td>
-                <td className="py-3 px-3">
-                  <Badge variant={variant}>{label}</Badge>
-                </td>
-                <td className="py-3 px-3">
+                <td className="py-3 px-4 text-slate-500 font-mono text-xs">{m.cedula}</td>
+                <td className="py-3 px-4 text-slate-500">{m.email ?? '—'}</td>
+                <td className="py-3 px-4"><Badge variant={variant}>{label}</Badge></td>
+                <td className="py-3 px-4">
                   <Badge variant={m.estado === 'activo' ? 'success' : 'danger'}>
                     {m.estado.charAt(0).toUpperCase() + m.estado.slice(1)}
                   </Badge>
@@ -251,29 +204,41 @@ function TabMiembros({ miembros }) {
   )
 }
 
-// ── Página principal ──────────────────────────────────────────
 export default function Bibliotecario() {
   const { toast, showToast, hideToast } = useToast()
   const [activeTab, setActiveTab] = useState('prestamos')
 
-  const cargar = useCallback(() => ({
-    prestamos : getTodosPrestamos(),
-    reservas  : getTodasReservas(),
-    multas    : getTodasMultas(),
-    miembros  : getMiembros(),
-  }), [])
+  const [datos,   setDatos]   = useState({ prestamos: [], reservas: [], multas: [], miembros: [] })
+  const [loading, setLoading] = useState(true)
 
-  const [datos, setDatos] = useState(cargar)
-  const { prestamos, reservas, multas, miembros } = datos
+  const cargar = useCallback(async () => {
+    try {
+      const [prestamos, reservas, multas, miembros] = await Promise.all([
+        getTodosPrestamos(),
+        getTodasReservas(),
+        getTodasMultas(),
+        getMiembros(),
+      ])
+      setDatos({ prestamos, reservas, multas, miembros })
+    } catch {
+      setDatos({ prestamos: [], reservas: [], multas: [], miembros: [] })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
-  const vencidos = prestamos.filter(p => getEstadoPrestamo(p) === 'vencido').length
+  useEffect(() => { cargar() }, [cargar])
 
   const handleDevolucion = async (prestamoId) => {
-    await new Promise(r => setTimeout(r, 300))
-    const result = registrarDevolucion(prestamoId)
+    const result = await registrarDevolucion(prestamoId)
     showToast(result.mensaje, result.ok ? 'success' : 'error')
-    if (result.ok) setDatos(cargar())
+    if (result.ok) cargar()
   }
+
+  const { prestamos, reservas, multas, miembros } = datos
+  const vencidos = prestamos.filter(p => getEstadoPrestamo(p) === 'vencido').length
+
+  const conteo = { prestamos: prestamos.length, reservas: reservas.length, multas: multas.length, miembros: miembros.length }
 
   return (
     <div className="page-container">
@@ -286,74 +251,43 @@ export default function Bibliotecario() {
 
       {/* Métricas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricaCard
-          label="Préstamos activos"
-          value={prestamos.length}
-          icon={ClipboardDocumentListIcon}
-          color="blue"
-        />
-        <MetricaCard
-          label="Vencidos"
-          value={vencidos}
-          icon={ExclamationTriangleIcon}
-          color={vencidos > 0 ? 'red' : 'slate'}
-        />
-        <MetricaCard
-          label="Reservas en cola"
-          value={reservas.length}
-          icon={BookmarkIcon}
-          color="amber"
-        />
-        <MetricaCard
-          label="Multas pendientes"
-          value={multas.length}
-          icon={BanknotesIcon}
-          color={multas.length > 0 ? 'red' : 'slate'}
-        />
+        <MetricaCard label="Préstamos activos"  value={loading ? '—' : prestamos.length} icon={ClipboardDocumentListIcon} color="blue"  />
+        <MetricaCard label="Vencidos"            value={loading ? '—' : vencidos}         icon={ExclamationTriangleIcon}   color={vencidos > 0 ? 'red' : 'slate'} />
+        <MetricaCard label="Reservas en cola"    value={loading ? '—' : reservas.length}  icon={BookmarkIcon}              color="amber" />
+        <MetricaCard label="Multas pendientes"   value={loading ? '—' : multas.length}    icon={BanknotesIcon}             color={multas.length > 0 ? 'red' : 'slate'} />
       </div>
 
       {/* Tabs */}
       <div className="card">
-        {/* Tab bar */}
         <div className="flex border-b border-slate-100 overflow-x-auto">
-          {TABS.map(({ id, label, icon: Icon }) => {
-            const count = {
-              prestamos: prestamos.length,
-              reservas:  reservas.length,
-              multas:    multas.length,
-              miembros:  miembros.length,
-            }[id]
-
-            return (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                  activeTab === id
-                    ? 'border-blue-600 text-blue-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                  activeTab === id ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
-                }`}>
-                  {count}
-                </span>
-              </button>
-            )
-          })}
+          {TABS.map(({ id, label, icon: Icon }) => (
+            <button key={id} onClick={() => setActiveTab(id)}
+              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                activeTab === id
+                  ? 'border-blue-600 text-blue-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === id ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                {loading ? '…' : conteo[id]}
+              </span>
+            </button>
+          ))}
         </div>
 
-        {/* Tab content */}
         <div className="py-2">
-          {activeTab === 'prestamos' && (
-            <TabPrestamos prestamos={prestamos} onDevolucion={handleDevolucion} />
+          {loading ? (
+            <div className="flex justify-center py-16"><Spinner size="lg" className="text-blue-500" /></div>
+          ) : (
+            <>
+              {activeTab === 'prestamos' && <TabPrestamos prestamos={prestamos} onDevolucion={handleDevolucion} />}
+              {activeTab === 'reservas'  && <TabReservas  reservas={reservas} />}
+              {activeTab === 'multas'    && <TabMultas    multas={multas} />}
+              {activeTab === 'miembros'  && <TabMiembros  miembros={miembros} />}
+            </>
           )}
-          {activeTab === 'reservas' && <TabReservas  reservas={reservas} />}
-          {activeTab === 'multas'   && <TabMultas    multas={multas}     />}
-          {activeTab === 'miembros' && <TabMiembros  miembros={miembros} />}
         </div>
       </div>
     </div>
