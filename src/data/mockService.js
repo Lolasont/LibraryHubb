@@ -1,13 +1,11 @@
-// ============================================================
-// MOCK SERVICE — capa de servicios con datos simulados
+// Servicio con datos simulados en memoria.
+// Sirve para trabajar el frontend sin tener que levantar el backend
+// ni MongoDB. Las paginas no usan este archivo directamente: en su
+// lugar importan de apiService.js, que tiene exactamente las mismas
+// firmas pero hace fetch a la API real.
 //
-// CÓMO REEMPLAZAR POR API:
-//   Cada función devuelve datos directamente ahora.
-//   Cuando el backend esté listo, reemplazar el cuerpo de cada
-//   función por un fetch/axios a la API correspondiente.
-//   Los componentes NO necesitan cambios porque consumen
-//   estas funciones, no los datos directamente.
-// ============================================================
+// Para volver al modo mock sin tocar el codigo de las paginas, basta
+// con cambiar la importacion en apiService.js para que use este archivo.
 
 import {
   libros as _libros,
@@ -18,27 +16,35 @@ import {
   categorias,
 } from './mockData'
 
-// Estado mutable de sesión (se resetea al recargar — comportamiento normal sin backend)
-let libros     = _libros.map(l => ({ ...l }))
-let prestamos  = _prestamos.map(p => ({ ...p }))
-let reservas   = _reservas.map(r => ({ ...r }))
-let multas     = _multas.map(m => ({ ...m }))
-let nextId     = { prestamo: 100, reserva: 100, multa: 100 }
+// Copias de los arrays originales para poder mutarlos (los originales
+// quedan intactos entre recargas).
+const libros     = _libros.map(l => ({ ...l }))
+const prestamos  = _prestamos.map(p => ({ ...p }))
+const reservas   = _reservas.map(r => ({ ...r }))
+const multas     = _multas.map(m => ({ ...m }))
+// Contadores para asignar ids a registros nuevos.
+const nextId     = { prestamo: 100, reserva: 100, multa: 100 }
+
+// Quita el campo password de un usuario antes de devolverlo al frontend.
+function omitPassword(usuario) {
+  const safe = { ...usuario }
+  delete safe.password
+  return safe
+}
 
 // ─── AUTH ────────────────────────────────────────────────────
 
 /**
- * Autentica un usuario por cédula y contraseña.
- * @returns {object|null} usuario sin password, o null si falla
+ * Autentica un usuario por cedula y contrasena.
+ * @returns {object|null} usuario sin password, o null si falla.
  */
 export function loginUsuario(cedula, password) {
   const usuario = usuarios.find(u => u.cedula === cedula && u.password === password)
   if (!usuario) return null
-  const { password: _, ...safe } = usuario
-  return safe
+  return omitPassword(usuario)
 }
 
-// ─── CATEGORÍAS ──────────────────────────────────────────────
+// ─── CATEGORIAS ──────────────────────────────────────────────
 
 export function getCategorias() {
   return [...categorias]
@@ -47,7 +53,7 @@ export function getCategorias() {
 // ─── LIBROS ──────────────────────────────────────────────────
 
 /**
- * Retorna libros filtrados por búsqueda y/o categoría.
+ * Devuelve los libros filtrados por busqueda y/o categoria.
  * @param {object} opts - { busqueda: string, categoria_id: number|null }
  */
 export function getLibros({ busqueda = '', categoria_id = null } = {}) {
@@ -64,16 +70,16 @@ export function getLibros({ busqueda = '', categoria_id = null } = {}) {
 }
 
 /**
- * Retorna un libro por ID, con info de reservas en cola.
+ * Devuelve un libro por su id, o null si no existe.
  */
 export function getLibroById(id) {
   return libros.find(l => l.id === Number(id)) || null
 }
 
-// ─── PRÉSTAMOS ───────────────────────────────────────────────
+// ─── PRESTAMOS ───────────────────────────────────────────────
 
 /**
- * Préstamos activos y vencidos de un miembro.
+ * Prestamos activos y vencidos de un socio.
  */
 export function getPrestamosActivos(miembro_id) {
   return prestamos.filter(
@@ -82,21 +88,21 @@ export function getPrestamosActivos(miembro_id) {
 }
 
 /**
- * Historial completo de préstamos de un miembro.
+ * Historial completo de prestamos de un socio.
  */
 export function getHistorialPrestamos(miembro_id) {
   return prestamos.filter(p => p.miembro_id === Number(miembro_id))
 }
 
 /**
- * Todos los préstamos activos/vencidos (para el bibliotecario).
+ * Todos los prestamos activos o vencidos (para el bibliotecario).
  */
 export function getTodosPrestamos() {
   return prestamos.filter(p => p.estado !== 'devuelto')
 }
 
 /**
- * Solicita un préstamo para un miembro sobre un libro.
+ * Crea un prestamo para un socio sobre un libro.
  * @returns {{ ok: boolean, mensaje: string, prestamo?: object }}
  */
 export function solicitarPrestamo(miembro_id, libro_id) {
@@ -106,7 +112,7 @@ export function solicitarPrestamo(miembro_id, libro_id) {
   }
   const fechaPrestamo = new Date()
   const fechaVenc = new Date()
-  fechaVenc.setDate(fechaVenc.getDate() + 14) // 14 días de préstamo
+  fechaVenc.setDate(fechaVenc.getDate() + 14)  // 14 dias de prestamo
 
   const nuevoPrestamo = {
     id: nextId.prestamo++,
@@ -120,42 +126,42 @@ export function solicitarPrestamo(miembro_id, libro_id) {
   }
   prestamos.push(nuevoPrestamo)
   libro.copias_disponibles -= 1
-  return { ok: true, mensaje: 'Préstamo registrado con éxito.', prestamo: nuevoPrestamo }
+  return { ok: true, mensaje: 'Prestamo registrado con exito.', prestamo: nuevoPrestamo }
 }
 
 /**
- * Renueva un préstamo activo por 14 días más.
+ * Renueva un prestamo activo por 14 dias mas.
  * @returns {{ ok: boolean, mensaje: string }}
  */
 export function renovarPrestamo(prestamo_id) {
   const prestamo = prestamos.find(p => p.id === Number(prestamo_id))
   if (!prestamo || prestamo.estado === 'devuelto') {
-    return { ok: false, mensaje: 'Préstamo no válido para renovar.' }
+    return { ok: false, mensaje: 'Prestamo no valido para renovar.' }
   }
   const base = new Date(prestamo.fecha_devolucion_esperada)
   base.setDate(base.getDate() + 14)
   prestamo.fecha_devolucion_esperada = base.toISOString().split('T')[0]
   prestamo.estado = 'activo'
-  return { ok: true, mensaje: 'Préstamo renovado por 14 días más.' }
+  return { ok: true, mensaje: 'Prestamo renovado por 14 dias mas.' }
 }
 
 /**
- * Registra la devolución de un préstamo (acción de bibliotecario).
+ * Registra la devolucion de un prestamo. Accion del bibliotecario.
  */
 export function registrarDevolucion(prestamo_id) {
   const prestamo = prestamos.find(p => p.id === Number(prestamo_id))
-  if (!prestamo) return { ok: false, mensaje: 'Préstamo no encontrado.' }
+  if (!prestamo) return { ok: false, mensaje: 'Prestamo no encontrado.' }
   prestamo.estado = 'devuelto'
   prestamo.fecha_devolucion = new Date().toISOString().split('T')[0]
   const libro = libros.find(l => l.id === prestamo.libro_id)
   if (libro) libro.copias_disponibles += 1
-  return { ok: true, mensaje: 'Devolución registrada.' }
+  return { ok: true, mensaje: 'Devolucion registrada.' }
 }
 
 // ─── RESERVAS ────────────────────────────────────────────────
 
 /**
- * Reservas activas de un miembro.
+ * Reservas activas de un socio.
  */
 export function getReservasByMiembro(miembro_id) {
   return reservas.filter(
@@ -164,7 +170,7 @@ export function getReservasByMiembro(miembro_id) {
 }
 
 /**
- * Reservas activas de un libro (para mostrar cola en detalle).
+ * Reservas activas de un libro puntual, ordenadas por posicion en la cola.
  */
 export function getReservasByLibro(libro_id) {
   return reservas
@@ -180,7 +186,7 @@ export function getTodasReservas() {
 }
 
 /**
- * Crea una reserva para un miembro sobre un libro sin copias disponibles.
+ * Crea una reserva para un socio sobre un libro sin copias disponibles.
  * @returns {{ ok: boolean, mensaje: string, reserva?: object }}
  */
 export function hacerReserva(miembro_id, libro_id) {
@@ -195,6 +201,7 @@ export function hacerReserva(miembro_id, libro_id) {
   const colaActual = reservas.filter(r => r.libro_id === Number(libro_id) && r.estado === 'reservado')
   const posicion = colaActual.length + 1
 
+  // Estimacion: 14 dias por cada persona en la cola antes que el.
   const fechaEstimada = new Date()
   fechaEstimada.setDate(fechaEstimada.getDate() + posicion * 14)
 
@@ -209,7 +216,7 @@ export function hacerReserva(miembro_id, libro_id) {
     fecha_estimada_disponibilidad: fechaEstimada.toISOString().split('T')[0],
   }
   reservas.push(nuevaReserva)
-  return { ok: true, mensaje: `Reserva creada. Estás en posición ${posicion} en la cola.`, reserva: nuevaReserva }
+  return { ok: true, mensaje: `Reserva creada. Estas en posicion ${posicion} en la cola.`, reserva: nuevaReserva }
 }
 
 /**
@@ -225,7 +232,7 @@ export function cancelarReserva(reserva_id) {
 // ─── MULTAS ──────────────────────────────────────────────────
 
 /**
- * Multas pendientes de un miembro.
+ * Multas pendientes de un socio.
  */
 export function getMultasByMiembro(miembro_id) {
   return multas.filter(m => m.miembro_id === Number(miembro_id) && !m.pagada)
@@ -243,20 +250,20 @@ export function getTodasMultas() {
 export function getMiembros() {
   return usuarios
     .filter(u => u.rol === 'miembro')
-    .map(({ password: _, ...u }) => u)
+    .map(omitPassword)
 }
 
 export function getMiembroById(id) {
   const u = usuarios.find(u => u.id === Number(id))
   if (!u) return null
-  const { password: _, ...safe } = u
-  return safe
+  return omitPassword(u)
 }
 
 // ─── UTILIDADES ──────────────────────────────────────────────
 
 /**
- * Determina el estado visual de un préstamo según fecha de vencimiento.
+ * Determina el estado visual de un prestamo segun su fecha de vencimiento.
+ * Es logica pura, por eso se reexporta desde apiService.js sin cambios.
  * @returns {'vencido'|'alerta'|'activo'}
  */
 export function getEstadoPrestamo(prestamo) {

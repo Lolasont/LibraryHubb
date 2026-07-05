@@ -1,3 +1,10 @@
+/* ============================================================
+   Estilos globales del proyecto.
+   Acá se importan las directivas de Tailwind y se definen las
+   clases reutilizables (botones, inputs, tarjetas y layout)
+   que consumen las páginas para evitar repetir utilidades.
+   ============================================================ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,40 +16,60 @@
 }
 
 @layer components {
-  /* Buttons */
+  /* ─────────────────── Botones ─────────────────── */
+
+  /* Botón principal: acciones positivas (Ingresar, Guardar). */
   .btn-primary {
     @apply bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-semibold py-2.5 px-5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
+
+  /* Botón secundario: acciones neutras o de volver. */
   .btn-secondary {
     @apply bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-semibold py-2.5 px-5 rounded-lg border border-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
+
+  /* Botón de peligro: acciones destructivas. */
   .btn-danger {
     @apply bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold py-2.5 px-5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
+
+  /* Botón fantasma: acciones secundarias. */
   .btn-ghost {
     @apply text-slate-600 hover:bg-slate-100 font-medium py-2 px-4 rounded-lg transition-colors;
   }
 
-  /* Inputs */
+  /* ───────────── Campos de formulario ───────────── */
+
+  /* Campo de texto estándar. */
   .input-field {
     @apply w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white placeholder-slate-400 transition;
   }
+
+  /* Selector estándar. */
   .select-field {
     @apply w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white transition appearance-none cursor-pointer;
   }
 
-  /* Layout */
+  /* ─────────────────── Layout ─────────────────── */
+
+  /* Contenedor principal de las páginas internas. */
   .page-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 py-6;
   }
+
+  /* Título principal de la página. */
   .page-title {
     @apply text-2xl font-display font-bold text-blue-900;
   }
+
+  /* Subtítulo de la página. */
   .page-subtitle {
     @apply text-slate-500 text-sm mt-0.5;
   }
 
-  /* Card */
+  /* ─────────────────── Tarjetas ─────────────────── */
+
+  /* Tarjeta base reutilizable. */
   .card {
     @apply bg-white rounded-xl border border-slate-200 shadow-sm;
   }

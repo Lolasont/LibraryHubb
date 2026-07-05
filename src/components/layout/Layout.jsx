@@ -1,6 +1,12 @@
+// Layout principal para todas las paginas internas de la app.
+// Muestra un sidebar a la izquierda (con el menu segun el rol del usuario)
+// y el contenido de la ruta actual a la derecha.
+// En mobile el sidebar se oculta detras de un boton hamburguesa.
+
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import PropTypes from 'prop-types'
 import {
   BookOpenIcon,
   UserIcon,
@@ -11,32 +17,41 @@ import {
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline'
 
+// Items del menu para socios.
 const MENU_MIEMBRO = [
   { path: '/libros',       label: 'Buscar Libros', icon: BookOpenIcon },
   { path: '/mi-perfil',    label: 'Mi Perfil',     icon: UserIcon },
   { path: '/mis-reservas', label: 'Mis Reservas',  icon: BookmarkIcon },
 ]
 
+// Items del menu para el bibliotecario.
 const MENU_BIBLIOTECARIO = [
-  { path: '/libros',        label: 'Catálogo',         icon: BookOpenIcon },
+  { path: '/libros',        label: 'Catalogo',         icon: BookOpenIcon },
   { path: '/bibliotecario', label: 'Panel de control', icon: BuildingLibraryIcon },
 ]
 
+// Pequeno badge de membresia que aparece en la sidebar junto al nombre del socio.
 function MembresiaLabel({ tipo }) {
   const map = {
-    basica:     { label: 'Básica',     color: 'text-blue-300' },
+    basica:     { label: 'Basica',     color: 'text-blue-300' },
     premium:    { label: 'Premium',    color: 'text-amber-400' },
     estudiante: { label: 'Estudiante', color: 'text-cyan-400' },
   }
   const { label, color } = map[tipo] ?? { label: tipo, color: 'text-blue-300' }
-  return <span className={`text-xs ${color}`}>Membresía {label}</span>
+  return <span className={`text-xs ${color}`}>Membresia {label}</span>
+}
+
+MembresiaLabel.propTypes = {
+  tipo: PropTypes.string,
 }
 
 export default function Layout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  // sidebarOpen controla si el sidebar esta visible en mobile.
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Elegimos el menu segun el rol del usuario.
   const menu = user?.rol === 'bibliotecario' ? MENU_BIBLIOTECARIO : MENU_MIEMBRO
 
   const handleLogout = () => {
@@ -46,6 +61,7 @@ export default function Layout() {
 
   const closeSidebar = () => setSidebarOpen(false)
 
+  // Estilo del link activo vs inactivo. NavLink nos da isActive automaticamente.
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
       isActive
@@ -56,7 +72,7 @@ export default function Layout() {
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
 
-      {/* ── Overlay mobile ── */}
+      {/* Overlay oscuro en mobile cuando el sidebar esta abierto. */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
@@ -73,7 +89,7 @@ export default function Layout() {
           lg:relative lg:translate-x-0
         `}
       >
-        {/* Logo */}
+        {/* Logo y titulo. */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-blue-800 flex-shrink-0">
           <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <BookOpenIcon className="w-5 h-5 text-white" />
@@ -82,18 +98,20 @@ export default function Layout() {
             <h1 className="font-display font-bold text-lg leading-none text-white">LibraryHub</h1>
             <p className="text-blue-300 text-xs mt-0.5">Biblioteca Digital</p>
           </div>
+          {/* Boton de cerrar, solo visible en mobile. */}
           <button
             onClick={closeSidebar}
             className="ml-auto lg:hidden text-blue-300 hover:text-white p-1 rounded"
-            aria-label="Cerrar menú"
+            aria-label="Cerrar menu"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
-        {/* User info */}
+        {/* Info del usuario actual. */}
         <div className="px-5 py-4 border-b border-blue-800 flex-shrink-0">
           <div className="flex items-center gap-3">
+            {/* Inicial del nombre como avatar. */}
             <div className="w-9 h-9 bg-blue-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
               {user?.nombre?.charAt(0)}
             </div>
@@ -107,7 +125,7 @@ export default function Layout() {
           </div>
         </div>
 
-        {/* Nav */}
+        {/* Navegacion principal. */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {menu.map(({ path, label, icon: Icon }) => (
             <NavLink
@@ -122,27 +140,27 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Logout */}
+        {/* Boton de cerrar sesion. */}
         <div className="px-3 pb-5 flex-shrink-0">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-200 hover:bg-blue-800/60 hover:text-white transition-colors"
           >
             <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
-            Cerrar sesión
+            Cerrar sesion
           </button>
         </div>
       </aside>
 
-      {/* ── Main ── */}
+      {/* ── Contenido principal ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* Top bar mobile */}
+        {/* Barra superior visible solo en mobile (con el boton hamburguesa). */}
         <header className="lg:hidden flex items-center gap-4 px-4 py-3 bg-white border-b border-slate-200 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-slate-500 hover:text-slate-800 p-1 rounded"
-            aria-label="Abrir menú"
+            aria-label="Abrir menu"
           >
             <Bars3Icon className="w-6 h-6" />
           </button>
@@ -154,7 +172,7 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Page content */}
+        {/* Contenido de la pagina actual. Outlet lo inyecta React Router. */}
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>

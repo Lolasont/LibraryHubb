@@ -1,6 +1,13 @@
+// Componentes de badges (etiquetas pequenas de estado).
+// Hay dos variantes:
+//   - Badge: un span con fondo de color segun el variant.
+//   - DotBadge: un puntito de color + texto, ideal para indicar disponibilidad.
+
+import PropTypes from 'prop-types'
+
 /**
  * Badge — indicador visual de estado.
- * variant: 'success' | 'danger' | 'warning' | 'info' | 'default' | 'premium' | 'estudiante'
+ * Variantes disponibles: success, danger, warning, info, default, premium, estudiante.
  */
 export function Badge({ variant = 'default', children, className = '' }) {
   const variants = {
@@ -22,8 +29,15 @@ export function Badge({ variant = 'default', children, className = '' }) {
   )
 }
 
+Badge.propTypes = {
+  variant:   PropTypes.string,
+  children:  PropTypes.node.isRequired,
+  className: PropTypes.string,
+}
+
 /**
  * DotBadge — indicador compacto con punto de color.
+ * Pensado para mostrar disponibilidad de un libro de un vistazo.
  */
 export function DotBadge({ available, count }) {
   return (
@@ -32,4 +46,9 @@ export function DotBadge({ available, count }) {
       {available ? `${count} disponible${count !== 1 ? 's' : ''}` : 'No disponible'}
     </span>
   )
+}
+
+DotBadge.propTypes = {
+  available: PropTypes.bool.isRequired,
+  count:     PropTypes.number.isRequired,
 }

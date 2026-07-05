@@ -1,4 +1,16 @@
+// Componente raiz de la aplicacion.
+// Define todas las rutas y los requisitos de autenticacion para cada una.
+//
+// Como esta armado:
+// - "/" (sin loguearse) muestra el Login.
+// - "/" (logueado) redirige segun el rol del usuario.
+// - Las rutas que requieren sesion pasan por <RequireAuth>, que
+//   redirige al login si no hay usuario, o a /libros si el rol
+//   no tiene permiso para esa ruta.
+// - <Layout> envuelve las rutas autenticadas y provee el sidebar.
+
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import PropTypes from 'prop-types'
 import { useAuth } from './context/AuthContext'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login/Login'
@@ -8,6 +20,8 @@ import MiPerfil from './pages/MiPerfil/MiPerfil'
 import MisReservas from './pages/MisReservas/MisReservas'
 import Bibliotecario from './pages/Bibliotecario/Bibliotecario'
 
+// Guard de autenticacion. Si no hay usuario, va al login.
+// Si hay usuario pero su rol no esta en allowedRoles, va a /libros.
 function RequireAuth({ allowedRoles }) {
   const { user } = useAuth()
   if (!user) return <Navigate to="/" replace />
@@ -17,11 +31,17 @@ function RequireAuth({ allowedRoles }) {
   return <Outlet />
 }
 
+// Definimos los tipos de las props para que sea mas facil detectar errores.
+RequireAuth.propTypes = {
+  allowedRoles: PropTypes.arrayOf(PropTypes.string),
+}
+
 export default function App() {
   const { user } = useAuth()
 
   return (
     <Routes>
+      {/* Ruta raiz: muestra el Login o redirige segun si hay sesion. */}
       <Route
         path="/"
         element={
@@ -31,22 +51,26 @@ export default function App() {
         }
       />
 
+      {/* Rutas protegidas. RequireAuth envuelve a Layout, que muestra el sidebar. */}
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>
           <Route path="/libros"     element={<Libros />} />
           <Route path="/libros/:id" element={<LibroDetalle />} />
 
+          {/* Rutas solo para socios. */}
           <Route element={<RequireAuth allowedRoles={['miembro']} />}>
             <Route path="/mi-perfil"    element={<MiPerfil />} />
             <Route path="/mis-reservas" element={<MisReservas />} />
           </Route>
 
+          {/* Rutas solo para el bibliotecario. */}
           <Route element={<RequireAuth allowedRoles={['bibliotecario']} />}>
             <Route path="/bibliotecario" element={<Bibliotecario />} />
           </Route>
         </Route>
       </Route>
 
+      {/* Cualquier ruta desconocida va al inicio. */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
