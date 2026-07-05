@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getTodosPrestamos,
   getTodasReservas,
@@ -8,6 +8,18 @@ import {
 } from "../../data/mockService";
 
 export default function Bibliotecario() {
+  useEffect(() => {
+    async function probarMongo() {
+      try {
+        const libros = await window.db.listarLibrosMongo();
+        console.log("Libros desde Mongo:", libros);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    probarMongo();
+  }, []);
   const [prestamos, setPrestamos] = useState(getTodosPrestamos());
 
   const reservas = getTodasReservas();
