@@ -1,44 +1,105 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { getLibros, getCategorias } from '../../data/mockService'
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Libros() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const [busqueda, setBusqueda] = useState('')
-  const [categoriaId, setCategoriaID] = useState('')
-  const [listaLibros, setListaLibros] = useState([])
-  const [listacategorias, setListaCategorias] = useState([])
-
-  useEffect(() => {
-    const categorias = getCategorias()
-    setListaCategorias(categorias)
-  },[])
+  const [busqueda, setBusqueda] = useState("");
+  const [categoriaId, setCategoriaId] = useState("");
+  const [listaLibros, setListaLibros] = useState([]);
+  const [listaCategorias, setListaCategorias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-  const librosFiltrados = getLibros({
-    busqueda,
-    categoria_id: categoriaId || null,
-  })
-    setListaLibros(librosFiltrados)
-  }, [busqueda, categoriaId])
+    async function cargarDatosMongo() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const librosMongo = await window.db.listarLibrosMongo();
+        const categoriasMongo = await window.db.listarCategoriasMongo();
+
+        setListaLibros(librosMongo);
+        setListaCategorias(categoriasMongo);
+      } catch (error) {
+        console.error(error);
+        setError("No se pudieron cargar los libros desde MongoDB.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    cargarDatosMongo();
+  }, []);
+
+  const obtenerNombreCategoria = (categoriaIdLibro) => {
+    const categoria = listaCategorias.find(
+      (cat) => cat.id === categoriaIdLibro,
+    );
+
+    return categoria ? categoria.nombre : "Categoría no encontrada";
+  };
+
+  const librosFiltrados = useMemo(() => {
+    return listaLibros.filter((libro) => {
+      const textoBusqueda = busqueda.toLowerCase().trim();
+
+      const coincideBusqueda =
+        !textoBusqueda ||
+        libro.titulo?.toLowerCase().includes(textoBusqueda) ||
+        libro.autores?.some((autor) =>
+          autor.toLowerCase().includes(textoBusqueda),
+        ) ||
+        libro.isbn?.includes(textoBusqueda);
+
+      const coincideCategoria =
+        !categoriaId || libro.categoria_id === categoriaId;
+
+      return coincideBusqueda && coincideCategoria;
+    });
+  }, [listaLibros, busqueda, categoriaId]);
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow p-6">
+          <p className="text-slate-600">Cargando libros desde MongoDB...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="max-w-6xl mx-auto bg-red-50 border border-red-200 rounded-2xl p-6">
+          <h1 className="text-xl font-bold text-red-700 mb-2">Error</h1>
+          <p className="text-red-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
       <div className="max-w-6xl mx-auto">
+        {/* Encabezado */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900">
             Catálogo de Libros
           </h1>
+
           <p className="text-slate-600 mt-1">
-            Explora el catálogo de LibraryHub, busca por titulo, autor o ISBN y filtra por categoria.
+            Explora los libros cargados desde MongoDB.
           </p>
         </div>
-<div className="bg-white rounded-2xl shadow p-4 mb-6 flex flex-col md:flex-row gap-4">
-        
+
+        {/* Filtros */}
+        <div className="bg-white rounded-2xl shadow p-4 mb-6 flex flex-col md:flex-row gap-4">
           <input
             type="text"
-            placeholder="Buscar por titulo, autor o ISBN"
+            placeholder="Buscar por título, autor o ISBN..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="flex-1 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
@@ -46,11 +107,12 @@ function Libros() {
 
           <select
             value={categoriaId}
-            onChange={(e) => setCategoriaID(e.target.value)}
+            onChange={(e) => setCategoriaId(e.target.value)}
             className="border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Todas las categorias</option>
-            {listacategorias.map((categoria)=>(
+            <option value="">Todas las categorías</option>
+
+            {listaCategorias.map((categoria) => (
               <option key={categoria.id} value={categoria.id}>
                 {categoria.nombre}
               </option>
@@ -58,53 +120,62 @@ function Libros() {
           </select>
         </div>
 
+        {/* Cantidad de resultados */}
         <div className="mb-4 text-sm text-slate-500">
-          Mostrando {listaLibros.length} libro(s)
+          Mostrando {librosFiltrados.length} libro(s)
         </div>
 
+        {/* Listado */}
         <div className="grid gap-4">
-          {listaLibros.length > 0 ? (
-            listaLibros.map((libro) => (
-              <div
-                key={libro.id}
-                className="bg-white rounded-2xl shadow p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-              >
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">
-                    {libro.titulo}
-                  </h2>
+          {librosFiltrados.length > 0 ? (
+            librosFiltrados.map((libro) => {
+              const nombreCategoria = obtenerNombreCategoria(
+                libro.categoria_id,
+              );
+              const hayCopias = libro.cantidad_copias > 0;
 
-                  <p className="text-slate-600">
-                    {libro.autores.join(', ')}
-                  </p>
+              return (
+                <div
+                  key={libro.id}
+                  className="bg-white rounded-2xl shadow p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                >
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      {libro.titulo}
+                    </h2>
 
-                  <p className="text-sm text-slate-500 mt-1">
-                    {libro.categoria} • {libro.año_publicacion} • ISBN: {libro.isbn}
-                  </p>
+                    <p className="text-slate-600">
+                      {libro.autores?.join(", ")}
+                    </p>
+
+                    <p className="text-sm text-slate-500 mt-1">
+                      {nombreCategoria} • ISBN: {libro.isbn}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col md:items-end gap-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        hayCopias
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {hayCopias
+                        ? `${libro.cantidad_copias} copias`
+                        : "Sin copias"}
+                    </span>
+
+                    <button
+                      onClick={() => navigate(`/libros/${libro.id}`)}
+                      className="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition"
+                    >
+                      Ver detalle
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex flex-col md:items-end gap-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      libro.copias_disponibles > 0
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}
-                  >
-                    {libro.copias_disponibles > 0
-                      ? `${libro.copias_disponibles} disponibles`
-                      : 'Sin stock'}
-                  </span>
-
-                  <button
-                    onClick={() => navigate(`/libros/${libro.id}`)}
-                    className="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition"
-                  >
-                    Ver detalle
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="bg-white rounded-2xl shadow p-6 text-center text-slate-500">
               No se encontraron libros con esos filtros.
@@ -113,7 +184,7 @@ function Libros() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Libros
+export default Libros;

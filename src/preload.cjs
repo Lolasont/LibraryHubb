@@ -4,4 +4,6 @@ contextBridge.exposeInMainWorld('db', {
   probarConexion: () => 'Puente Electron funcionando',
 
   listarLibrosMongo: () => ipcRenderer.invoke('mongo-listar-libros'),
+
+  listarCategoriasMongo: () => ipcRenderer.invoke('mongo-listar-categorias')
 })

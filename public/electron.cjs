@@ -37,6 +37,25 @@ ipcMain.handle('mongo-listar-libros', async () => {
   }))
 })
 
+const categoriaSchema = new mongoose.Schema({
+    nombre: String,
+})
+
+const categoriaMongo = mongoose.model(
+    'categorias',
+     categoriaSchema,
+      'categorias'
+    )
+
+ipcMain.handle('mongo-listar-categorias', async () => {
+    const categorias = await categoriaMongo.find().lean()
+
+    return categorias.map((categoria) =>({
+        id: String(categoria._id),
+        nombre: categoria.nombre,
+    }))
+})
+
 function crearVentana() {
   ventana = new BrowserWindow({
     width: 1200,
