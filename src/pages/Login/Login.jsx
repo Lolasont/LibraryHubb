@@ -88,8 +88,8 @@ export default function Login() {
       {/* ── Panel izquierdo — decorativo ── */}
       <div className="hidden lg:flex lg:w-[48%] xl:w-1/2 bg-blue-900 relative overflow-hidden flex-col justify-between p-12 flex-shrink-0">
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          {SPINES.map((s, i) => (
-            <div key={i} className="absolute top-0 h-full opacity-30"
+          {SPINES.map((s) => (
+            <div key={`${s.left}-${s.hue}`} className="absolute top-0 h-full opacity-30"
               style={{ left: s.left, width: s.w, background: `hsl(${s.hue}, ${s.sat}%, ${s.lit}%)` }}
             />
           ))}

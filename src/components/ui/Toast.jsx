@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { CheckCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 /**
@@ -27,4 +28,9 @@ export function Toast({ toast, onClose }) {
       </button>
     </div>
   )
+}
+
+Toast.propTypes = {
+  toast:   PropTypes.object,
+  onClose: PropTypes.func.isRequired,
 }

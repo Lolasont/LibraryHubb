@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+
 /**
  * EmptyState — pantalla vacía reutilizable.
  * Props: icon (emoji o texto), title, description, action (nodo React opcional)
@@ -13,4 +15,15 @@ export function EmptyState({ icon = '📭', title, description, action }) {
       {action && <div className="mt-5">{action}</div>}
     </div>
   )
+}
+
+EmptyState.propTypes = {
+  icon:        PropTypes.string,
+  title:       PropTypes.string.isRequired,
+  description: PropTypes.string,
+  action:      PropTypes.node,
+}
+
+EmptyState.defaultProps = {
+  icon: '📭',
 }

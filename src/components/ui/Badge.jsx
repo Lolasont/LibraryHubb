@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+
 /**
  * Badge — indicador visual de estado.
  * variant: 'success' | 'danger' | 'warning' | 'info' | 'default' | 'premium' | 'estudiante'
@@ -22,6 +24,17 @@ export function Badge({ variant = 'default', children, className = '' }) {
   )
 }
 
+Badge.propTypes = {
+  variant:   PropTypes.string,
+  children:  PropTypes.node.isRequired,
+  className: PropTypes.string,
+}
+
+Badge.defaultProps = {
+  variant:   'default',
+  className: '',
+}
+
 /**
  * DotBadge — indicador compacto con punto de color.
  */
@@ -32,4 +45,9 @@ export function DotBadge({ available, count }) {
       {available ? `${count} disponible${count !== 1 ? 's' : ''}` : 'No disponible'}
     </span>
   )
+}
+
+DotBadge.propTypes = {
+  available: PropTypes.bool.isRequired,
+  count:     PropTypes.number.isRequired,
 }

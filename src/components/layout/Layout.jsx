@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import PropTypes from 'prop-types'
 import {
   BookOpenIcon,
   UserIcon,
@@ -30,6 +31,10 @@ function MembresiaLabel({ tipo }) {
   }
   const { label, color } = map[tipo] ?? { label: tipo, color: 'text-blue-300' }
   return <span className={`text-xs ${color}`}>Membresía {label}</span>
+}
+
+MembresiaLabel.propTypes = {
+  tipo: PropTypes.string,
 }
 
 export default function Layout() {

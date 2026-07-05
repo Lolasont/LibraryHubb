@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { Spinner } from '../../components/ui/Spinner'
 import { Toast } from '../../components/ui/Toast'
 import { useToast } from '../../hooks/useToast'
+import PropTypes from 'prop-types'
 import {
   formatDate, formatCLP, getDiasRestantes,
   getMembresiaInfo, TASAS_CAMBIO, convertirCLP,
@@ -43,6 +44,10 @@ function EstadoPrestamoBadge({ prestamo }) {
   )
 }
 
+EstadoPrestamoBadge.propTypes = {
+  prestamo: PropTypes.object.isRequired,
+}
+
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null
   return (
@@ -54,6 +59,12 @@ function InfoRow({ icon: Icon, label, value }) {
       </div>
     </div>
   )
+}
+
+InfoRow.propTypes = {
+  icon:  PropTypes.elementType.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 }
 
 function ConvertidorMultas({ montoCLP }) {
@@ -71,6 +82,10 @@ function ConvertidorMultas({ montoCLP }) {
       </select>
     </div>
   )
+}
+
+ConvertidorMultas.propTypes = {
+  montoCLP: PropTypes.number.isRequired,
 }
 
 export default function MiPerfil() {

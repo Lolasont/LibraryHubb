@@ -13,6 +13,7 @@ import { Spinner } from '../../components/ui/Spinner'
 import { Toast } from '../../components/ui/Toast'
 import { useToast } from '../../hooks/useToast'
 import { formatDate, formatCLP, getMembresiaInfo } from '../../data/utils'
+import PropTypes from 'prop-types'
 import {
   ClipboardDocumentListIcon, BookmarkIcon, BanknotesIcon,
   UsersIcon, CheckIcon, ExclamationTriangleIcon, ClockIcon,
@@ -46,11 +47,22 @@ function MetricaCard({ label, value, icon: Icon, color }) {
   )
 }
 
+MetricaCard.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  icon:  PropTypes.elementType.isRequired,
+  color: PropTypes.string,
+}
+
 function EstadoBadge({ prestamo }) {
   const estado = getEstadoPrestamo(prestamo)
   if (estado === 'vencido') return <Badge variant="danger">Vencido</Badge>
   if (estado === 'alerta')  return <Badge variant="warning">Por vencer</Badge>
   return <Badge variant="success">Al día</Badge>
+}
+
+EstadoBadge.propTypes = {
+  prestamo: PropTypes.object.isRequired,
 }
 
 function TabPrestamos({ prestamos, onDevolucion }) {
@@ -91,6 +103,11 @@ function TabPrestamos({ prestamos, onDevolucion }) {
   )
 }
 
+TabPrestamos.propTypes = {
+  prestamos:    PropTypes.array.isRequired,
+  onDevolucion: PropTypes.func.isRequired,
+}
+
 function TabReservas({ reservas }) {
   if (reservas.length === 0) return <EmptyState icon="🔖" title="No hay reservas activas" />
   return (
@@ -127,6 +144,10 @@ function TabReservas({ reservas }) {
   )
 }
 
+TabReservas.propTypes = {
+  reservas: PropTypes.array.isRequired,
+}
+
 function TabMultas({ multas }) {
   if (multas.length === 0) return <EmptyState icon="💚" title="No hay multas pendientes" />
   const total = multas.reduce((s, m) => s + m.monto, 0)
@@ -160,6 +181,10 @@ function TabMultas({ multas }) {
       </div>
     </div>
   )
+}
+
+TabMultas.propTypes = {
+  multas: PropTypes.array.isRequired,
 }
 
 function TabMiembros({ miembros }) {
@@ -202,6 +227,10 @@ function TabMiembros({ miembros }) {
       </table>
     </div>
   )
+}
+
+TabMiembros.propTypes = {
+  miembros: PropTypes.array.isRequired,
 }
 
 export default function Bibliotecario() {

@@ -1,7 +1,8 @@
 // ============================================================
 // MOCK DATA — basado en el schema SQL de LibraryHub
-// Se reemplaza por llamadas a la API cuando se implemente el backend
+// SOLO PARA LOCAL SIN BACKEND (BASE DE DATOS)
 // ============================================================
+
 
 export const categorias = [
   { id: 1, nombre: 'Ficción',    descripcion: 'Novelas y relatos' },

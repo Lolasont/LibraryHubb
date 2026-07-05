@@ -12,6 +12,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Toast } from '../../components/ui/Toast'
 import { Spinner } from '../../components/ui/Spinner'
 import { useToast } from '../../hooks/useToast'
+import PropTypes from 'prop-types'
 import {
   ArrowLeftIcon, BookOpenIcon, UserGroupIcon,
   ClockIcon, CheckCircleIcon, ExclamationTriangleIcon,
@@ -24,6 +25,11 @@ function DetalleRow({ label, value }) {
       <span className="text-sm font-medium text-slate-800 text-right">{value ?? '—'}</span>
     </div>
   )
+}
+
+DetalleRow.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 }
 
 function PanelAccion({ libro, reservas, miReserva, onPrestamo, onReserva, loading }) {
@@ -92,6 +98,15 @@ function PanelAccion({ libro, reservas, miReserva, onPrestamo, onReserva, loadin
       </div>
     </div>
   )
+}
+
+PanelAccion.propTypes = {
+  libro:      PropTypes.object.isRequired,
+  reservas:   PropTypes.array,
+  miReserva:  PropTypes.object,
+  onPrestamo: PropTypes.func.isRequired,
+  onReserva:  PropTypes.func.isRequired,
+  loading:    PropTypes.bool,
 }
 
 export default function LibroDetalle() {

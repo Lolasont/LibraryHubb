@@ -6,10 +6,10 @@ import { Spinner } from '../../components/ui/Spinner'
 import { Toast } from '../../components/ui/Toast'
 import { useToast } from '../../hooks/useToast'
 import { formatDate } from '../../data/utils'
+import PropTypes from 'prop-types'
 import { BookmarkIcon, ClockIcon, XMarkIcon, ArrowRightIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 
-function TarjetaReserva({ reserva, onCancelar, cancelando }) {
-  const navigate = useNavigate()
+function TarjetaReserva({ reserva, onCancelar, cancelando, onVerLibro }) {
   return (
     <div className="p-5 flex flex-col sm:flex-row sm:items-start gap-4">
       <div className="flex-shrink-0 flex flex-col items-center gap-1">
@@ -42,7 +42,7 @@ function TarjetaReserva({ reserva, onCancelar, cancelando }) {
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        <button onClick={() => navigate(`/libros/${reserva.libro_id}`)}
+        <button onClick={() => onVerLibro(reserva.libro_id)}
           className="btn-ghost text-xs py-1.5 px-3 flex items-center gap-1"
         >
           Ver libro<ArrowRightIcon className="w-3 h-3" />
@@ -58,6 +58,13 @@ function TarjetaReserva({ reserva, onCancelar, cancelando }) {
       </div>
     </div>
   )
+}
+
+TarjetaReserva.propTypes = {
+  reserva:    PropTypes.object.isRequired,
+  onCancelar: PropTypes.func.isRequired,
+  cancelando: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onVerLibro: PropTypes.func.isRequired,
 }
 
 export default function MisReservas() {
@@ -124,7 +131,13 @@ export default function MisReservas() {
         ) : (
           <div className="divide-y divide-slate-100">
             {reservas.map(reserva => (
-              <TarjetaReserva key={reserva.id} reserva={reserva} onCancelar={handleCancelar} cancelando={cancelando} />
+              <TarjetaReserva
+                key={reserva.id}
+                reserva={reserva}
+                onCancelar={handleCancelar}
+                cancelando={cancelando}
+                onVerLibro={(id) => navigate(`/libros/${id}`)}
+              />
             ))}
           </div>
         )}

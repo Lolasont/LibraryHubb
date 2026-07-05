@@ -4,6 +4,7 @@ import { getLibros, getCategorias } from '../../data/apiService'
 import { DotBadge, Badge } from '../../components/ui/Badge'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { Spinner } from '../../components/ui/Spinner'
+import PropTypes from 'prop-types'
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -35,6 +36,11 @@ function LibroCard({ libro, onClick }) {
       </div>
     </button>
   )
+}
+
+LibroCard.propTypes = {
+  libro:   PropTypes.object.isRequired,
+  onClick: PropTypes.func.isRequired,
 }
 
 export default function Libros() {
