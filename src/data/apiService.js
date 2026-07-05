@@ -79,9 +79,15 @@ export async function getTodosPrestamos() {
   return request('/prestamos')
 }
 
+/**
+ * Solicita un préstamo para el usuario autenticado.
+ * @param {null} _miembro_id - No se usa: el backend obtiene el miembro del JWT.
+ *   Se mantiene el parámetro para conservar la misma firma que
+ *   mockService.js (ver "Servicio dual mock / API" en CONTEXTO_v2.md).
+ * @param {string} libro_id
+ */
 export async function solicitarPrestamo(_miembro_id, libro_id) {
   try {
-    // miembro_id viene del JWT en el backend — no se necesita enviarlo
     return await request('/prestamos', { method: 'POST', body: { libro_id } })
   } catch (err) {
     return { ok: false, mensaje: err.message }
@@ -118,6 +124,13 @@ export async function getTodasReservas() {
   return request('/reservas')
 }
 
+/**
+ * Crea una reserva para el usuario autenticado.
+ * @param {null} _miembro_id - No se usa: el backend obtiene el miembro del JWT.
+ *   Se mantiene el parámetro para conservar la misma firma que
+ *   mockService.js (ver "Servicio dual mock / API" en CONTEXTO_v2.md).
+ * @param {string} libro_id
+ */
 export async function hacerReserva(_miembro_id, libro_id) {
   try {
     return await request('/reservas', { method: 'POST', body: { libro_id } })

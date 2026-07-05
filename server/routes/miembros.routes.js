@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Miembro from '../models/Miembro.js'
 import { verifyToken, requireRole } from '../middleware/auth.js'
+import { toDate } from '../utils/format.js'
 
 const router = Router()
 
@@ -17,9 +18,10 @@ router.get('/', verifyToken, requireRole('bibliotecario'), async (req, res) => {
       telefono:       m.telefono,
       tipo_membresia: m.tipo_membresia,
       estado:         m.estado,
-      fecha_registro: m.fecha_registro ? new Date(m.fecha_registro).toISOString().split('T')[0] : null,
+      fecha_registro: toDate(m.fecha_registro),
     })))
   } catch (err) {
+    console.error('Error obteniendo miembros:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo miembros.' })
   }
 })

@@ -39,7 +39,14 @@ function LibroCard({ libro, onClick }) {
 }
 
 LibroCard.propTypes = {
-  libro:   PropTypes.object.isRequired,
+  libro: PropTypes.shape({
+    id:                  PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    titulo:              PropTypes.string.isRequired,
+    autores:             PropTypes.arrayOf(PropTypes.string).isRequired,
+    categoria:           PropTypes.string,
+    año_publicacion:     PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    copias_disponibles:  PropTypes.number.isRequired,
+  }).isRequired,
   onClick: PropTypes.func.isRequired,
 }
 

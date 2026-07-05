@@ -62,7 +62,10 @@ function EstadoBadge({ prestamo }) {
 }
 
 EstadoBadge.propTypes = {
-  prestamo: PropTypes.object.isRequired,
+  prestamo: PropTypes.shape({
+    estado:                    PropTypes.string,
+    fecha_devolucion_esperada: PropTypes.string,
+  }).isRequired,
 }
 
 function TabPrestamos({ prestamos, onDevolucion }) {
@@ -104,7 +107,14 @@ function TabPrestamos({ prestamos, onDevolucion }) {
 }
 
 TabPrestamos.propTypes = {
-  prestamos:    PropTypes.array.isRequired,
+  prestamos: PropTypes.arrayOf(PropTypes.shape({
+    id:                        PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    libro_titulo:              PropTypes.string,
+    miembro_id:                PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    fecha_prestamo:            PropTypes.string,
+    fecha_devolucion_esperada: PropTypes.string,
+    estado:                    PropTypes.string,
+  })).isRequired,
   onDevolucion: PropTypes.func.isRequired,
 }
 
@@ -145,7 +155,14 @@ function TabReservas({ reservas }) {
 }
 
 TabReservas.propTypes = {
-  reservas: PropTypes.array.isRequired,
+  reservas: PropTypes.arrayOf(PropTypes.shape({
+    id:                            PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    libro_titulo:                  PropTypes.string,
+    miembro_id:                    PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    posicion_cola:                 PropTypes.number,
+    fecha_reserva:                 PropTypes.string,
+    fecha_estimada_disponibilidad: PropTypes.string,
+  })).isRequired,
 }
 
 function TabMultas({ multas }) {
@@ -184,7 +201,12 @@ function TabMultas({ multas }) {
 }
 
 TabMultas.propTypes = {
-  multas: PropTypes.array.isRequired,
+  multas: PropTypes.arrayOf(PropTypes.shape({
+    id:          PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    prestamo_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    miembro_id:  PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    monto:       PropTypes.number.isRequired,
+  })).isRequired,
 }
 
 function TabMiembros({ miembros }) {
@@ -230,7 +252,14 @@ function TabMiembros({ miembros }) {
 }
 
 TabMiembros.propTypes = {
-  miembros: PropTypes.array.isRequired,
+  miembros: PropTypes.arrayOf(PropTypes.shape({
+    id:             PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    nombre:         PropTypes.string.isRequired,
+    cedula:         PropTypes.string,
+    email:          PropTypes.string,
+    tipo_membresia: PropTypes.string,
+    estado:         PropTypes.string.isRequired,
+  })).isRequired,
 }
 
 export default function Bibliotecario() {

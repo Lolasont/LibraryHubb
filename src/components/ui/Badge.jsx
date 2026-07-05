@@ -30,11 +30,6 @@ Badge.propTypes = {
   className: PropTypes.string,
 }
 
-Badge.defaultProps = {
-  variant:   'default',
-  className: '',
-}
-
 /**
  * DotBadge — indicador compacto con punto de color.
  */

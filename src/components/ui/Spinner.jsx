@@ -15,8 +15,3 @@ Spinner.propTypes = {
   size:      PropTypes.string,
   className: PropTypes.string,
 }
-
-Spinner.defaultProps = {
-  size:      'md',
-  className: '',
-}

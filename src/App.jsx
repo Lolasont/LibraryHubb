@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import PropTypes from 'prop-types'
 import { useAuth } from './context/AuthContext'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login/Login'
@@ -15,6 +16,10 @@ function RequireAuth({ allowedRoles }) {
     return <Navigate to="/libros" replace />
   }
   return <Outlet />
+}
+
+RequireAuth.propTypes = {
+  allowedRoles: PropTypes.arrayOf(PropTypes.string),
 }
 
 export default function App() {

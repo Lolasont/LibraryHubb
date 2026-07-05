@@ -45,7 +45,10 @@ function EstadoPrestamoBadge({ prestamo }) {
 }
 
 EstadoPrestamoBadge.propTypes = {
-  prestamo: PropTypes.object.isRequired,
+  prestamo: PropTypes.shape({
+    estado:                    PropTypes.string,
+    fecha_devolucion_esperada: PropTypes.string,
+  }).isRequired,
 }
 
 function InfoRow({ icon: Icon, label, value }) {

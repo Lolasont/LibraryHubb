@@ -61,7 +61,14 @@ function TarjetaReserva({ reserva, onCancelar, cancelando, onVerLibro }) {
 }
 
 TarjetaReserva.propTypes = {
-  reserva:    PropTypes.object.isRequired,
+  reserva: PropTypes.shape({
+    id:                            PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    libro_id:                      PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    libro_titulo:                  PropTypes.string,
+    posicion_cola:                 PropTypes.number.isRequired,
+    fecha_reserva:                 PropTypes.string,
+    fecha_estimada_disponibilidad: PropTypes.string,
+  }).isRequired,
   onCancelar: PropTypes.func.isRequired,
   cancelando: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onVerLibro: PropTypes.func.isRequired,

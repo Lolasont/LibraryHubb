@@ -23,7 +23,3 @@ EmptyState.propTypes = {
   description: PropTypes.string,
   action:      PropTypes.node,
 }
-
-EmptyState.defaultProps = {
-  icon: '📭',
-}

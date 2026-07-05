@@ -3,12 +3,12 @@ import Prestamo from '../models/Prestamo.js'
 import Libro from '../models/Libro.js'
 import Multa from '../models/Multa.js'
 import { verifyToken, requireRole } from '../middleware/auth.js'
+import { toDate } from '../utils/format.js'
 
 const router = Router()
 
 // Formatea un Prestamo al shape que espera el frontend
 function formatPrestamo(p) {
-  const toDate = d => d ? new Date(d).toISOString().split('T')[0] : null
   return {
     id:                        p.id,
     miembro_id:                p.miembro?._id?.toString() ?? p.miembro?.toString(),
@@ -31,6 +31,7 @@ router.get('/me', verifyToken, async (req, res) => {
 
     return res.json(prestamos.map(formatPrestamo))
   } catch (err) {
+    console.error('Error obteniendo préstamos del miembro:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo préstamos.' })
   }
 })
@@ -45,6 +46,7 @@ router.get('/', verifyToken, requireRole('bibliotecario'), async (req, res) => {
 
     return res.json(prestamos.map(formatPrestamo))
   } catch (err) {
+    console.error('Error obteniendo todos los préstamos:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo préstamos.' })
   }
 })
@@ -119,6 +121,7 @@ router.patch('/:id/renovar', verifyToken, async (req, res) => {
 
     return res.json({ ok: true, mensaje: 'Préstamo renovado por 14 días más.' })
   } catch (err) {
+    console.error('Error renovando préstamo:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error al renovar el préstamo.' })
   }
 })

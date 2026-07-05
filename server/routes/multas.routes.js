@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Multa from '../models/Multa.js'
 import { verifyToken, requireRole } from '../middleware/auth.js'
+import { toDate } from '../utils/format.js'
 
 const router = Router()
 
@@ -11,7 +12,7 @@ function formatMulta(m) {
     miembro_id:  m.miembro?._id?.toString()  ?? m.miembro?.toString(),
     monto:       m.monto,
     pagada:      m.pagada,
-    fecha_pago:  m.fecha_pago ? new Date(m.fecha_pago).toISOString().split('T')[0] : null,
+    fecha_pago:  toDate(m.fecha_pago),
   }
 }
 
@@ -21,6 +22,7 @@ router.get('/me', verifyToken, async (req, res) => {
     const multas = await Multa.find({ miembro: req.user.id, pagada: false })
     return res.json(multas.map(formatMulta))
   } catch (err) {
+    console.error('Error obteniendo multas del miembro:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo multas.' })
   }
 })
@@ -35,6 +37,7 @@ router.get('/', verifyToken, requireRole('bibliotecario'), async (req, res) => {
 
     return res.json(multas.map(formatMulta))
   } catch (err) {
+    console.error('Error obteniendo todas las multas:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo multas.' })
   }
 })

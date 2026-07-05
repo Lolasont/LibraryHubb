@@ -32,27 +32,44 @@ DetalleRow.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 }
 
+/**
+ * DisponibilidadBar — bloque de "copias disponibles / total" con barra de progreso.
+ * Reutilizado por PanelAccion (vista miembro) y la vista de bibliotecario,
+ * que antes duplicaban este mismo marcado.
+ */
+function DisponibilidadBar({ copiasDisponibles, cantidadCopias }) {
+  const disponible = copiasDisponibles > 0
+  return (
+    <div>
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Disponibilidad</p>
+      <div className="flex items-end gap-2">
+        <span className={`text-4xl font-display font-bold ${disponible ? 'text-green-600' : 'text-red-500'}`}>
+          {copiasDisponibles}
+        </span>
+        <span className="text-slate-400 text-sm pb-1.5">/ {cantidadCopias} copias</span>
+      </div>
+      <div className="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all ${disponible ? 'bg-green-500' : 'bg-red-400'}`}
+          style={{ width: `${(copiasDisponibles / cantidadCopias) * 100}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+DisponibilidadBar.propTypes = {
+  copiasDisponibles: PropTypes.number.isRequired,
+  cantidadCopias:    PropTypes.number.isRequired,
+}
+
 function PanelAccion({ libro, reservas, miReserva, onPrestamo, onReserva, loading }) {
   const disponible    = libro.copias_disponibles > 0
   const totalReservas = reservas.length
 
   return (
     <div className="card p-6 flex flex-col gap-5">
-      <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Disponibilidad</p>
-        <div className="flex items-end gap-2">
-          <span className={`text-4xl font-display font-bold ${disponible ? 'text-green-600' : 'text-red-500'}`}>
-            {libro.copias_disponibles}
-          </span>
-          <span className="text-slate-400 text-sm pb-1.5">/ {libro.cantidad_copias} copias</span>
-        </div>
-        <div className="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${disponible ? 'bg-green-500' : 'bg-red-400'}`}
-            style={{ width: `${(libro.copias_disponibles / libro.cantidad_copias) * 100}%` }}
-          />
-        </div>
-      </div>
+      <DisponibilidadBar copiasDisponibles={libro.copias_disponibles} cantidadCopias={libro.cantidad_copias} />
 
       {totalReservas > 0 && (
         <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5">
@@ -101,9 +118,17 @@ function PanelAccion({ libro, reservas, miReserva, onPrestamo, onReserva, loadin
 }
 
 PanelAccion.propTypes = {
-  libro:      PropTypes.object.isRequired,
-  reservas:   PropTypes.array,
-  miReserva:  PropTypes.object,
+  libro: PropTypes.shape({
+    copias_disponibles: PropTypes.number.isRequired,
+    cantidad_copias:    PropTypes.number.isRequired,
+  }).isRequired,
+  reservas: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  })),
+  miReserva: PropTypes.shape({
+    posicion_cola:                 PropTypes.number,
+    fecha_estimada_disponibilidad: PropTypes.string,
+  }),
   onPrestamo: PropTypes.func.isRequired,
   onReserva:  PropTypes.func.isRequired,
   loading:    PropTypes.bool,
@@ -218,19 +243,7 @@ export default function LibroDetalle() {
         <div>
           {esBibliotecario ? (
             <div className="card p-6">
-              <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Disponibilidad</p>
-              <div className="flex items-end gap-2 mb-3">
-                <span className={`text-4xl font-display font-bold ${libro.copias_disponibles > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {libro.copias_disponibles}
-                </span>
-                <span className="text-slate-400 text-sm pb-1.5">/ {libro.cantidad_copias} copias</span>
-              </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full ${libro.copias_disponibles > 0 ? 'bg-green-500' : 'bg-red-400'}`}
-                  style={{ width: `${(libro.copias_disponibles / libro.cantidad_copias) * 100}%` }}
-                />
-              </div>
+              <DisponibilidadBar copiasDisponibles={libro.copias_disponibles} cantidadCopias={libro.cantidad_copias} />
               {reservas.length > 0 && (
                 <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5 mt-4">
                   {reservas.length} persona{reservas.length !== 1 ? 's' : ''} en cola

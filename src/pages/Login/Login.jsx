@@ -41,6 +41,10 @@ const STATS = [
   { label: 'Categorías', value: '5'       },
 ]
 
+// NOTA (Security Hotspot revisado): estas credenciales son intencionalmente
+// visibles porque son datos de la semilla de demostración (seed.js), no
+// secretos reales. Se muestran en pantalla para facilitar la evaluación
+// académica del proyecto. No usar este patrón en un sistema de producción.
 const DEMO_CREDS = [
   { rol: 'Miembro básico',  cedula: '12345678', pass: '12345678' },
   { rol: 'Miembro premium', cedula: '23456789', pass: '23456789' },

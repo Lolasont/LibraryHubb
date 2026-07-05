@@ -19,11 +19,19 @@ import {
 } from './mockData'
 
 // Estado mutable de sesión (se resetea al recargar — comportamiento normal sin backend)
-let libros     = _libros.map(l => ({ ...l }))
-let prestamos  = _prestamos.map(p => ({ ...p }))
-let reservas   = _reservas.map(r => ({ ...r }))
-let multas     = _multas.map(m => ({ ...m }))
-let nextId     = { prestamo: 100, reserva: 100, multa: 100 }
+const libros     = _libros.map(l => ({ ...l }))
+const prestamos  = _prestamos.map(p => ({ ...p }))
+const reservas   = _reservas.map(r => ({ ...r }))
+const multas     = _multas.map(m => ({ ...m }))
+const nextId     = { prestamo: 100, reserva: 100, multa: 100 }
+
+// Quita el campo password de un usuario antes de exponerlo al frontend.
+// (evita destructurar una variable "password" que quedaría sin usar)
+function omitPassword(usuario) {
+  const safe = { ...usuario }
+  delete safe.password
+  return safe
+}
 
 // ─── AUTH ────────────────────────────────────────────────────
 
@@ -34,8 +42,7 @@ let nextId     = { prestamo: 100, reserva: 100, multa: 100 }
 export function loginUsuario(cedula, password) {
   const usuario = usuarios.find(u => u.cedula === cedula && u.password === password)
   if (!usuario) return null
-  const { password: _, ...safe } = usuario
-  return safe
+  return omitPassword(usuario)
 }
 
 // ─── CATEGORÍAS ──────────────────────────────────────────────
@@ -243,14 +250,13 @@ export function getTodasMultas() {
 export function getMiembros() {
   return usuarios
     .filter(u => u.rol === 'miembro')
-    .map(({ password: _, ...u }) => u)
+    .map(omitPassword)
 }
 
 export function getMiembroById(id) {
   const u = usuarios.find(u => u.id === Number(id))
   if (!u) return null
-  const { password: _, ...safe } = u
-  return safe
+  return omitPassword(u)
 }
 
 // ─── UTILIDADES ──────────────────────────────────────────────

@@ -4,6 +4,12 @@ import { verifyToken } from '../middleware/auth.js'
 
 const router = Router()
 
+// Escapa caracteres especiales de regex para evitar inyección de regex / ReDoS
+// cuando se usa texto del usuario directamente en un $regex de Mongo.
+function escapeRegex(texto) {
+  return texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 // Formatea un documento Libro al shape que espera el frontend
 function formatLibro(libro) {
   return {
@@ -28,10 +34,11 @@ router.get('/', verifyToken, async (req, res) => {
     const filtro = {}
 
     if (busqueda.trim()) {
+      const termino = escapeRegex(busqueda.trim())
       filtro.$or = [
-        { titulo:  { $regex: busqueda.trim(), $options: 'i' } },
-        { autores: { $regex: busqueda.trim(), $options: 'i' } },
-        { isbn:    { $regex: busqueda.trim(), $options: 'i' } },
+        { titulo:  { $regex: termino, $options: 'i' } },
+        { autores: { $regex: termino, $options: 'i' } },
+        { isbn:    { $regex: termino, $options: 'i' } },
       ]
     }
 
@@ -59,6 +66,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     }
     return res.json(formatLibro(libro))
   } catch (err) {
+    console.error('Error obteniendo libro por id:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo el libro.' })
   }
 })

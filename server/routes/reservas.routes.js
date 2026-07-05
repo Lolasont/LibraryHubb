@@ -2,11 +2,11 @@ import { Router } from 'express'
 import Reserva from '../models/Reserva.js'
 import Libro from '../models/Libro.js'
 import { verifyToken, requireRole } from '../middleware/auth.js'
+import { toDate } from '../utils/format.js'
 
 const router = Router()
 
 function formatReserva(r) {
-  const toDate = d => d ? new Date(d).toISOString().split('T')[0] : null
   return {
     id:                            r.id,
     miembro_id:                    r.miembro?._id?.toString() ?? r.miembro?.toString(),
@@ -29,6 +29,7 @@ router.get('/me', verifyToken, async (req, res) => {
 
     return res.json(reservas.map(formatReserva))
   } catch (err) {
+    console.error('Error obteniendo reservas del miembro:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo reservas.' })
   }
 })
@@ -43,6 +44,7 @@ router.get('/libro/:libro_id', verifyToken, async (req, res) => {
 
     return res.json(reservas.map(formatReserva))
   } catch (err) {
+    console.error('Error obteniendo cola de reservas del libro:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo cola de reservas.' })
   }
 })
@@ -57,6 +59,7 @@ router.get('/', verifyToken, requireRole('bibliotecario'), async (req, res) => {
 
     return res.json(reservas.map(formatReserva))
   } catch (err) {
+    console.error('Error obteniendo todas las reservas:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo reservas.' })
   }
 })
@@ -131,6 +134,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
 
     return res.json({ ok: true, mensaje: 'Reserva cancelada.' })
   } catch (err) {
+    console.error('Error cancelando reserva:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error al cancelar la reserva.' })
   }
 })

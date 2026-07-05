@@ -31,6 +31,10 @@ export function Toast({ toast, onClose }) {
 }
 
 Toast.propTypes = {
-  toast:   PropTypes.object,
+  toast: PropTypes.shape({
+    message: PropTypes.string,
+    type:    PropTypes.oneOf(['success', 'error']),
+    id:      PropTypes.number,
+  }),
   onClose: PropTypes.func.isRequired,
 }

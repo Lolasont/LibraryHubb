@@ -10,6 +10,7 @@ router.get('/', verifyToken, async (req, res) => {
     const categorias = await Categoria.find().sort({ nombre: 1 })
     return res.json(categorias.map(c => ({ id: c.id, nombre: c.nombre, descripcion: c.descripcion })))
   } catch (err) {
+    console.error('Error obteniendo categorías:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error obteniendo categorías.' })
   }
 })
