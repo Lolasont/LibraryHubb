@@ -3,15 +3,21 @@
 // reutilizan para formatear fechas, montos y membresias.
 
 /**
- * Convierte una fecha en formato ISO (YYYY-MM-DD) a un texto legible
- * en espanol. Por ejemplo: "2026-07-15" -> "15 de julio de 2026".
+ * Convierte una fecha a texto legible en espanol.
+ * Por ejemplo: "2026-07-15" -> "15 de julio de 2026".
  *
- * Se fuerza la hora 12:00 para evitar que la zona horaria mueva
- * la fecha un dia antes o despues.
+ * Acepta dos formatos:
+ * - "YYYY-MM-DD"              -> fecha simple (del seed o apiService)
+ * - "YYYY-MM-DDTHH:mm:ss.sssZ" -> ISO completo que devuelve MongoDB
+ *
+ * Para fechas simples se fuerza la hora 12:00 para evitar que la zona
+ * horaria desplace la fecha un dia. Para ISO completos se usa directamente.
  */
 export function formatDate(dateStr) {
   if (!dateStr) return '—'
-  const date = new Date(dateStr + 'T12:00:00')
+  const esDateSimple = /^\d{4}-\d{2}-\d{2}$/.test(String(dateStr))
+  const date = new Date(esDateSimple ? `${dateStr}T12:00:00` : dateStr)
+  if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('es-CL', {
     day: 'numeric',
     month: 'long',
@@ -34,12 +40,15 @@ export function formatCLP(amount) {
 /**
  * Calcula cuantos dias faltan hasta una fecha.
  * Devuelve un numero negativo si la fecha ya paso.
+ * Usa la misma logica de formatDate para manejar ambos formatos.
  */
 export function getDiasRestantes(dateStr) {
   if (!dateStr) return null
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
-  const venc = new Date(dateStr + 'T12:00:00')
+  const esDateSimple = /^\d{4}-\d{2}-\d{2}$/.test(String(dateStr))
+  const venc = new Date(esDateSimple ? `${dateStr}T12:00:00` : dateStr)
+  if (Number.isNaN(venc.getTime())) return null
   return Math.ceil((venc - hoy) / (1000 * 60 * 60 * 24))
 }
 

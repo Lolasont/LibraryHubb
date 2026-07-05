@@ -1,6 +1,6 @@
 // Script de semilla (seed).
 // Carga un conjunto de datos iniciales en MongoDB para poder probar
-// la aplicacion sin tener que cargar todo a mano desde la UI.
+// la aplicación sin tener que cargar los datos a mano desde la UI.
 //
 // Como correrlo:   npm run seed
 // Importante:     borra y recrea todas las colecciones cada vez que se ejecuta.
@@ -53,7 +53,7 @@ async function seed() {
     Miembro.create({ cedula: '56789012', password: '56789012', nombre: 'Luis Martinez',  email: 'luis@example.com',   telefono: '+56 9 3333 4444', direccion: 'Villa del Sol 654, Maipu',          tipo_membresia: 'premium',    rol: 'miembro',       fecha_registro: '2021-06-30' }),
     Miembro.create({ cedula: '00000001', password: 'admin',    nombre: 'Carmen Silva',   email: 'bibliotecario@libraryhub.cl', telefono: '+56 2 2345 6789',                       tipo_membresia: null,         rol: 'bibliotecario', fecha_registro: '2021-01-01' }),
   ])
-  const [juan, maria, carlos, ana, luis] = miembros
+  const [juan, maria, carlos,luis] = miembros
 
   // 4. Insertamos los libros del catalogo.
   console.log('Insertando libros...')
@@ -67,7 +67,7 @@ async function seed() {
     { titulo: 'El nombre de la rosa',                isbn: '9788467037807', autores: ['Umberto Eco'],            editorial: 'Debolsillo',    categoria: cat('Ficcion'),   año_publicacion: 1980, paginas: 544, cantidad_copias: 2, copias_disponibles: 2 },
     { titulo: 'Clean Code',                          isbn: '9780132350884', autores: ['Robert C. Martin'],       editorial: 'Prentice Hall', categoria: cat('Tecnica'),   año_publicacion: 2008, paginas: 431, cantidad_copias: 3, copias_disponibles: 0 },
   ])
-  const [cienAños, harry, hawking, alquimista, mundoFeliz, sapiens, rosa, cleanCode] = libros
+  const [cienAños, harry, hawking,mundoFeliz, sapiens,cleanCode] = libros
 
   // 5. Insertamos prestamos de ejemplo. Las fechas se calculan en base a hoy
   //    para que siempre se vean distintos escenarios (vencido, alerta, normal).
@@ -85,7 +85,7 @@ async function seed() {
     { miembro: juan.id,   libro: sapiens.id,     fecha_prestamo: hace(4),  fecha_devolucion_esperada: en(2),    estado: 'activo'  },
     { miembro: maria.id,  libro: cleanCode.id,   fecha_prestamo: hace(1),  fecha_devolucion_esperada: en(13),   estado: 'activo'  },
   ])
-  const [prestJuan, prestMaria] = prestamos
+  const [prestJuan] = prestamos
 
   // 6. Insertamos reservas de ejemplo, una por cada libro agotado.
   console.log('Insertando reservas...')
