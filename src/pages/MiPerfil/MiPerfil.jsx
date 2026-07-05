@@ -34,13 +34,13 @@ function EstadoPrestamoBadge({ prestamo }) {
   if (estado === 'vencido') return (
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
       <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-      Vencido ({Math.abs(dias)} dia{Math.abs(dias) !== 1 ? 's' : ''})
+      Vencido ({Math.abs(dias)} dia{Math.abs(dias) === 1 ? '' : 's'})
     </span>
   )
   if (estado === 'alerta') return (
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-      Vence en {dias} dia{dias !== 1 ? 's' : ''}
+      Vence en {dias} dia{dias === 1 ? '' : 's'}
     </span>
   )
   return (
@@ -137,6 +137,64 @@ export default function MiPerfil() {
   // Calculamos el total de multas para mostrarlo si hay mas de una.
   const { label: membresiaLabel, variant: membresiaVariant } = getMembresiaInfo(user.tipo_membresia)
   const totalMultas = multas.reduce((sum, m) => sum + m.monto, 0)
+  const prestamosCount = prestamos.length
+  const prestamosPlural = prestamosCount === 1 ? '' : 's'
+
+  let prestamosContent
+  if (loading) {
+    prestamosContent = (
+      <div className="flex justify-center py-16">
+        <Spinner size="lg" className="text-blue-500" />
+      </div>
+    )
+  } else if (prestamos.length === 0) {
+    prestamosContent = (
+      <EmptyState
+        icon="📚"
+        title="No tienes prestamos activos"
+        description="Visita el catalogo para buscar libros y solicitar prestamos."
+      />
+    )
+  } else {
+    prestamosContent = (
+      <div className="divide-y divide-slate-100">
+        {prestamos.map(prestamo => {
+          const estadoVisual = getEstadoPrestamo(prestamo)
+          const esVencido = estadoVisual === 'vencido'
+          let estadoIconBg = 'bg-blue-50'
+          if (esVencido) estadoIconBg = 'bg-red-100'
+          else if (estadoVisual === 'alerta') estadoIconBg = 'bg-amber-100'
+          return (
+            <div key={prestamo.id} className={`p-5 flex flex-col sm:flex-row sm:items-start gap-4 ${esVencido ? 'bg-red-50/40' : ''}`}>
+              <div className="flex-shrink-0">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${estadoIconBg}`}>
+                  {esVencido
+                    ? <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                    : <UserCircleIcon className="w-5 h-5 text-blue-500" />}
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm text-slate-900 leading-snug">{prestamo.libro_titulo}</p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                  <span className="text-xs text-slate-500">Prestado el {formatDate(prestamo.fecha_prestamo)}</span>
+                  <span className="text-xs text-slate-300">·</span>
+                  <span className="text-xs text-slate-500">Vence el {formatDate(prestamo.fecha_devolucion_esperada)}</span>
+                </div>
+                <div className="mt-2"><EstadoPrestamoBadge prestamo={prestamo} /></div>
+              </div>
+              <div className="flex-shrink-0">
+                <button onClick={() => handleRenovar(prestamo.id)}
+                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                >
+                  <ArrowPathIcon className="w-3.5 h-3.5" />Renovar
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <div className="page-container">
@@ -201,49 +259,11 @@ export default function MiPerfil() {
             <div className="px-6 py-4 border-b border-slate-100">
               <h2 className="font-semibold text-slate-800">Prestamos activos</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                {loading ? 'Cargando...' : `${prestamos.length} prestamo${prestamos.length !== 1 ? 's' : ''} vigente${prestamos.length !== 1 ? 's' : ''}`}
+                {loading ? 'Cargando...' : `${prestamosCount} prestamo${prestamosPlural} vigente${prestamosPlural}`}
               </p>
             </div>
 
-            {loading ? (
-              <div className="flex justify-center py-16"><Spinner size="lg" className="text-blue-500" /></div>
-            ) : prestamos.length === 0 ? (
-              <EmptyState icon="📚" title="No tienes prestamos activos" description="Visita el catalogo para buscar libros y solicitar prestamos." />
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {prestamos.map(prestamo => {
-                  const estadoVisual = getEstadoPrestamo(prestamo)
-                  const esVencido    = estadoVisual === 'vencido'
-                  return (
-                    <div key={prestamo.id} className={`p-5 flex flex-col sm:flex-row sm:items-start gap-4 ${esVencido ? 'bg-red-50/40' : ''}`}>
-                      <div className="flex-shrink-0">
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${esVencido ? 'bg-red-100' : estadoVisual === 'alerta' ? 'bg-amber-100' : 'bg-blue-50'}`}>
-                          {esVencido
-                            ? <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
-                            : <UserCircleIcon className="w-5 h-5 text-blue-500" />}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-slate-900 leading-snug">{prestamo.libro_titulo}</p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-                          <span className="text-xs text-slate-500">Prestado el {formatDate(prestamo.fecha_prestamo)}</span>
-                          <span className="text-xs text-slate-300">·</span>
-                          <span className="text-xs text-slate-500">Vence el {formatDate(prestamo.fecha_devolucion_esperada)}</span>
-                        </div>
-                        <div className="mt-2"><EstadoPrestamoBadge prestamo={prestamo} /></div>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <button onClick={() => handleRenovar(prestamo.id)}
-                          className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
-                        >
-                          <ArrowPathIcon className="w-3.5 h-3.5" />Renovar
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+            {prestamosContent}
           </div>
         </div>
 

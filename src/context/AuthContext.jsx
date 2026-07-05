@@ -6,7 +6,7 @@
 // a recargas del navegador. El token vive en una clave aparte para
 // que apiService.js lo pueda leer sin necesidad de importar este contexto.
 
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useMemo, useState, useCallback } from 'react'
 import PropTypes from 'prop-types'
 
 const AuthContext = createContext(null)
@@ -24,21 +24,23 @@ export function AuthProvider({ children }) {
 
   // login guarda el usuario y el token. Lo llama el componente Login
   // despues de que el backend responde con { user, token }.
-  const login = (userData, token) => {
+  const login = useCallback((userData, token) => {
     setUser(userData)
     localStorage.setItem('libraryhub_user', JSON.stringify(userData))
     localStorage.setItem('libraryhub_token', token)
-  }
+  }, [])
 
-  // logout limpia todo: memoria y localStorage.
-  const logout = () => {
+  // logout limpia el estado y localStorage.
+  const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem('libraryhub_user')
     localStorage.removeItem('libraryhub_token')
-  }
+  }, [])
+
+  const value = useMemo(() => ({ user, login, logout }), [user, login, logout])
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

@@ -75,6 +75,31 @@ function PanelAccion({ libro, reservas, miReserva, onPrestamo, onReserva, loadin
   const disponible    = libro.copias_disponibles > 0
   const totalReservas = reservas.length
 
+  let actionButton
+  if (disponible) {
+    actionButton = (
+      <button onClick={onPrestamo} disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+        {loading
+          ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Procesando...</>
+          : <><CheckCircleIcon className="w-4 h-4" />Solicitar prestamo</>}
+      </button>
+    )
+  } else if (miReserva) {
+    actionButton = (
+      <button disabled className="w-full py-2.5 px-5 rounded-lg bg-slate-100 text-slate-400 font-semibold text-sm cursor-not-allowed">
+        Ya tienes una reserva
+      </button>
+    )
+  } else {
+    actionButton = (
+      <button onClick={onReserva} disabled={loading} className="btn-secondary w-full flex items-center justify-center gap-2">
+        {loading
+          ? <><span className="w-4 h-4 border-2 border-slate-400/40 border-t-slate-600 rounded-full animate-spin" />Procesando...</>
+          : <><ClockIcon className="w-4 h-4" />Reservar libro</>}
+      </button>
+    )
+  }
+
   return (
     <div className="card p-6 flex flex-col gap-5">
       <DisponibilidadBar copiasDisponibles={libro.copias_disponibles} cantidadCopias={libro.cantidad_copias} />
@@ -83,7 +108,7 @@ function PanelAccion({ libro, reservas, miReserva, onPrestamo, onReserva, loadin
       {totalReservas > 0 && (
         <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5">
           <UserGroupIcon className="w-4 h-4 flex-shrink-0" />
-          <span>{totalReservas} persona{totalReservas !== 1 ? 's' : ''} en cola de espera</span>
+          <span>{totalReservas} persona{totalReservas === 1 ? '' : 's'} en cola de espera</span>
         </div>
       )}
 
@@ -102,26 +127,7 @@ function PanelAccion({ libro, reservas, miReserva, onPrestamo, onReserva, loadin
       )}
 
       <div className="pt-1">
-        {disponible ? (
-          // Hay copias: mostramos "Solicitar prestamo".
-          <button onClick={onPrestamo} disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
-            {loading
-              ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Procesando...</>
-              : <><CheckCircleIcon className="w-4 h-4" />Solicitar prestamo</>}
-          </button>
-        ) : miReserva ? (
-          // No hay copias y el socio ya esta en la cola.
-          <button disabled className="w-full py-2.5 px-5 rounded-lg bg-slate-100 text-slate-400 font-semibold text-sm cursor-not-allowed">
-            Ya tienes una reserva
-          </button>
-        ) : (
-          // No hay copias y el socio todavia no reservo: lo anotamos en la cola.
-          <button onClick={onReserva} disabled={loading} className="btn-secondary w-full flex items-center justify-center gap-2">
-            {loading
-              ? <><span className="w-4 h-4 border-2 border-slate-400/40 border-t-slate-600 rounded-full animate-spin" />Procesando...</>
-              : <><ClockIcon className="w-4 h-4" />Reservar libro</>}
-          </button>
-        )}
+        {actionButton}
         {!disponible && !miReserva && (
           <p className="text-xs text-slate-400 text-center mt-2">Te notificaremos cuando este disponible</p>
         )}
@@ -272,7 +278,7 @@ export default function LibroDetalle() {
               <DisponibilidadBar copiasDisponibles={libro.copias_disponibles} cantidadCopias={libro.cantidad_copias} />
               {reservas.length > 0 && (
                 <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5 mt-4">
-                  {reservas.length} persona{reservas.length !== 1 ? 's' : ''} en cola
+                  {reservas.length} persona{reservas.length === 1 ? '' : 's'} en cola
                 </p>
               )}
             </div>

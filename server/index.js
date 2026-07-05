@@ -17,6 +17,7 @@ import multasRoutes     from './routes/multas.routes.js'
 import miembrosRoutes   from './routes/miembros.routes.js'
 
 const app  = express()
+app.disable('x-powered-by')
 const PORT = process.env.PORT ?? 5000
 
 // ── Middlewares globales ───────────────────────────────────
@@ -51,9 +52,13 @@ app.use((err, req, res, _next) => {
 
 // Primero conectamos a MongoDB y recien despues abrimos el puerto.
 // Asi evitamos aceptar peticiones antes de tener la base de datos lista.
-conectarDB().then(() => {
+try {
+  await conectarDB()
   app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`)
     console.log('LibraryHub API lista')
   })
-})
+} catch (err) {
+  console.error('Error al conectar a la base de datos:', err)
+  process.exit(1)
+}

@@ -40,10 +40,13 @@ Badge.propTypes = {
  * Pensado para mostrar disponibilidad de un libro de un vistazo.
  */
 export function DotBadge({ available, count }) {
+  const pluralSuffix = count === 1 ? '' : 's'
+  const availabilityText = available ? `${count} disponible${pluralSuffix}` : 'No disponible'
+
   return (
     <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${available ? 'text-green-700' : 'text-red-600'}`}>
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${available ? 'bg-green-500' : 'bg-red-500'}`} />
-      {available ? `${count} disponible${count !== 1 ? 's' : ''}` : 'No disponible'}
+      {availabilityText}
     </span>
   )
 }

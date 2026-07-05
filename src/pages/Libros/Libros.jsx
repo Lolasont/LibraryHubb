@@ -93,6 +93,32 @@ export default function Libros() {
   // Limpia los filtros y vuelve a mostrar el catalogo completo.
   const limpiarFiltros = () => { setBusqueda(''); setCategoriaId('') }
   const hayFiltros = busqueda.trim() !== '' || categoriaId !== ''
+  // Separa la logica de renderizado del estado de resultados para evitar
+  // un operador ternario anidado en el JSX.
+  let resultadosSection
+  if (loading) {
+    resultadosSection = (
+      <div className="flex justify-center py-20">
+        <Spinner size="lg" className="text-blue-500" />
+      </div>
+    )
+  } else if (libros.length === 0) {
+    resultadosSection = (
+      <EmptyState
+        icon="🔍" title="No se encontraron libros"
+        description={hayFiltros ? 'Prueba con otro termino o cambia la categoria.' : 'El catalogo esta vacio.'}
+        action={hayFiltros && <button onClick={limpiarFiltros} className="btn-secondary text-sm">Ver todos los libros</button>}
+      />
+    )
+  } else {
+    resultadosSection = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {libros.map(libro => (
+          <LibroCard key={libro.id} libro={libro} onClick={() => navigate(`/libros/${libro.id}`)} />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="page-container">
@@ -133,7 +159,7 @@ export default function Libros() {
       {/* Barra con el conteo de resultados y un boton para limpiar los filtros. */}
       <div className="flex items-center justify-between mb-5">
         <p className="text-sm text-slate-500">
-          {loading ? 'Buscando...' : <><span className="font-semibold text-slate-700">{libros.length}</span> libro{libros.length !== 1 ? 's' : ''} encontrado{libros.length !== 1 ? 's' : ''}</>}
+          {loading ? 'Buscando...' : <><span className="font-semibold text-slate-700">{libros.length}</span> libro{libros.length === 1 ? '' : 's'} encontrado{libros.length === 1 ? '' : 's'}</>}
         </p>
         {hayFiltros && !loading && (
           <button onClick={limpiarFiltros} className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
@@ -142,24 +168,7 @@ export default function Libros() {
         )}
       </div>
 
-      {/* Tres estados posibles: cargando, sin resultados, o grilla de libros. */}
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <Spinner size="lg" className="text-blue-500" />
-        </div>
-      ) : libros.length === 0 ? (
-        <EmptyState
-          icon="🔍" title="No se encontraron libros"
-          description={hayFiltros ? 'Prueba con otro termino o cambia la categoria.' : 'El catalogo esta vacio.'}
-          action={hayFiltros && <button onClick={limpiarFiltros} className="btn-secondary text-sm">Ver todos los libros</button>}
-        />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {libros.map(libro => (
-            <LibroCard key={libro.id} libro={libro} onClick={() => navigate(`/libros/${libro.id}`)} />
-          ))}
-        </div>
-      )}
+      {resultadosSection}
     </div>
   )
 }

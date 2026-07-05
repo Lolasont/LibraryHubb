@@ -9,7 +9,7 @@
 //     durante el desarrollo, o el bundle estatico de /dist en produccion.
 
 const { app, BrowserWindow } = require('electron')
-const path = require('path')
+const path = require('node:path')
 const isDev = require('electron-is-dev')
 
 let ventana

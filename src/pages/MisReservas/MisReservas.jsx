@@ -41,9 +41,12 @@ function TarjetaReserva({ reserva, onCancelar, cancelando, onVerLibro }) {
         </div>
         <div className="mt-2.5 flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 rounded px-2.5 py-1.5 w-fit">
           <UserGroupIcon className="w-3.5 h-3.5" />
-          {reserva.posicion_cola === 1
-            ? 'Seras el proximo en recibir este libro'
-            : `Hay ${reserva.posicion_cola - 1} persona${reserva.posicion_cola - 1 !== 1 ? 's' : ''} antes que tu`}
+            {(() => {
+              if (reserva.posicion_cola === 1) return 'Seras el proximo en recibir este libro'
+              const personasAntes = reserva.posicion_cola - 1
+              const palabraPersona = personasAntes === 1 ? 'persona' : 'personas'
+              return `Hay ${personasAntes} ${palabraPersona} antes que tu`
+            })()}
         </div>
       </div>
 
@@ -110,6 +113,35 @@ export default function MisReservas() {
     if (result.ok) cargar()
   }
 
+  let contenidoReservas
+  if (loading) {
+    contenidoReservas = (
+      <div className="flex justify-center py-16"><Spinner size="lg" className="text-blue-500" /></div>
+    )
+  } else if (reservas.length === 0) {
+    contenidoReservas = (
+      <EmptyState
+        icon="🔖" title="No tienes reservas activas"
+        description="Cuando reserves un libro sin copias disponibles, aparecera aqui."
+        action={<button onClick={() => navigate('/libros')} className="btn-primary text-sm">Buscar libros</button>}
+      />
+    )
+  } else {
+    contenidoReservas = (
+      <div className="divide-y divide-slate-100">
+        {reservas.map(reserva => (
+          <TarjetaReserva
+            key={reserva.id}
+            reserva={reserva}
+            onCancelar={handleCancelar}
+            cancelando={cancelando}
+            onVerLibro={(id) => navigate(`/libros/${id}`)}
+          />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="page-container">
       <Toast toast={toast} onClose={hideToast} />
@@ -124,7 +156,11 @@ export default function MisReservas() {
           <div>
             <h2 className="font-semibold text-slate-800">Reservas activas</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {loading ? 'Cargando...' : `${reservas.length} reserva${reservas.length !== 1 ? 's' : ''} pendiente${reservas.length !== 1 ? 's' : ''}`}
+                {(() => {
+                  const isSingular = reservas.length === 1
+                  if (loading) return 'Cargando...'
+                  return `${reservas.length} reserva${isSingular ? '' : 's'} pendiente${isSingular ? '' : 's'}`
+                })()}
             </p>
           </div>
           {!loading && reservas.length > 0 && (
@@ -134,27 +170,7 @@ export default function MisReservas() {
           )}
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-16"><Spinner size="lg" className="text-blue-500" /></div>
-        ) : reservas.length === 0 ? (
-          <EmptyState
-            icon="🔖" title="No tienes reservas activas"
-            description="Cuando reserves un libro sin copias disponibles, aparecera aqui."
-            action={<button onClick={() => navigate('/libros')} className="btn-primary text-sm">Buscar libros</button>}
-          />
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {reservas.map(reserva => (
-              <TarjetaReserva
-                key={reserva.id}
-                reserva={reserva}
-                onCancelar={handleCancelar}
-                cancelando={cancelando}
-                onVerLibro={(id) => navigate(`/libros/${id}`)}
-              />
-            ))}
-          </div>
-        )}
+        {contenidoReservas}
       </div>
     </div>
   )

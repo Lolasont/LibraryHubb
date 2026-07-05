@@ -14,7 +14,7 @@ import {
   BuildingLibraryIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowRightOnRectangleIcon,
+  ArrowRightStartOnRectangleIcon,
 } from '@heroicons/react/24/outline'
 
 // Items del menu para socios.
@@ -74,9 +74,11 @@ export default function Layout() {
 
       {/* Overlay oscuro en mobile cuando el sidebar esta abierto. */}
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
           onClick={closeSidebar}
+          aria-label="Cerrar menu"
         />
       )}
 
@@ -146,7 +148,7 @@ export default function Layout() {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-200 hover:bg-blue-800/60 hover:text-white transition-colors"
           >
-            <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
+            <ArrowRightStartOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
             Cerrar sesion
           </button>
         </div>

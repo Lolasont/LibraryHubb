@@ -302,12 +302,15 @@ export default function Bibliotecario() {
 
   useEffect(() => { cargar() }, [cargar])
 
-  // Cuando el bibliotecario registra una devolucion, se puede generar una multa
-  // automatica. Recargamos todo para que la tabla se mantenga sincronizada.
+  // Registramos la devolución y recargamos los datos para mantener la tabla sincronizada.
   const handleDevolucion = async (prestamoId) => {
-    const result = await registrarDevolucion(prestamoId)
-    showToast(result.mensaje, result.ok ? 'success' : 'error')
-    if (result.ok) cargar()
+    try {
+      const result = await registrarDevolucion(prestamoId)
+      showToast(result.mensaje, result.ok ? 'success' : 'error')
+      if (result.ok) await cargar()
+    } catch {
+      showToast('Error al registrar la devolución', 'error')
+    }
   }
 
   const { prestamos, reservas, multas, miembros } = datos

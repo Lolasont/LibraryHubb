@@ -12,7 +12,7 @@ const router = Router()
 // una inyeccion de regex o ataques de tipo ReDoS (Regular Expression Denial of Service).
 // Esta funcion los neutraliza agregando un backslash antes de cada uno.
 function escapeRegex(texto) {
-  return texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return texto.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)
 }
 
 // Convierte un documento Libro de Mongo al formato que espera el frontend.

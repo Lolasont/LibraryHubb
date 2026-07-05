@@ -113,7 +113,9 @@ async function seed() {
   process.exit(0)
 }
 
-seed().catch(err => {
+try {
+  await seed()
+} catch (err) {
   console.error('Error en seed:', err)
   process.exit(1)
-})
+}
