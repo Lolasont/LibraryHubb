@@ -76,7 +76,7 @@ export default function Login() {
 
     // Llamamos a la API real. apiService se encarga de mandar el fetch y devolver
     // { user, token } o null si las credenciales no coinciden.
-    const data = await loginUsuario(cedula.trim(), password)
+    const data = await Promise.resolve(loginUsuario(cedula.trim(), password))
 
     if (!data) {
       setError('Cedula o contrasena incorrecta. Verifica tus datos.')
