@@ -51,10 +51,9 @@ const STATS = [
 
 // NOTA: estas credenciales son intencionalmente visibles porque son
 // datos de la semilla de demostracion, no secretos reales. Facilitan
-// la evaluacion del proyecto. NO usar este patron en un sistema en produccion.
+// la evaluacion del proyecto.
 const DEMO_CREDS = [
-  { rol: 'Socio',         cedula: '12345678', pass: '12345678' },
-  { rol: 'Socio',         cedula: '23456789', pass: '23456789' },
+  { rol: 'Miembro',         cedula: '12345678', pass: '12345678' },
   { rol: 'Bibliotecario', cedula: '00000001', pass: 'admin'    },
 ]
 
