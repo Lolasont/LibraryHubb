@@ -10,6 +10,17 @@
 // asi un token sirve para ambos backends y se puede alternar VITE_API_URL
 // sin tener que reloguear.
 
+// ──────────────────────────────────────────────────────────────────
+// AMPLIACION DEL ALCANCE ORIGINAL
+// El enunciado del caso pedia unicamente el frontend de una biblioteca
+// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
+// Mi Perfil y Mis Reservas), usando una API publica de conversion de
+// moneda para las multas. Este backend completo no formaba parte de
+// ese enunciado. Se conserva porque esta completamente integrado al
+// sistema y el equipo decidio mantenerlo como valor anadido del
+// proyecto, no porque haya sido requerido originalmente.
+// ──────────────────────────────────────────────────────────────────
+
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
@@ -27,7 +38,6 @@ import { toDate } from './utils/format.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname  = path.dirname(__filename)
 const DB_PATH    = path.join(__dirname, 'db.json')
-const SEED_PATH  = path.join(__dirname, 'db.seed.json')
 
 const PORT = process.env.PORT ?? 5001
 
@@ -95,9 +105,11 @@ function formatLibro(libro) {
 
 function formatPrestamo(p) {
   const libro = db.libros.find(l => l.id === p.libro_id)
+  const miembro = db.miembros.find(m => m.id === p.miembro_id)
   return {
     id:                        p.id,
     miembro_id:                p.miembro_id,
+    miembro_nombre:            miembro?.nombre ?? null,
     libro_id:                  p.libro_id,
     libro_titulo:              libro?.titulo ?? p.libro_titulo ?? null,
     fecha_prestamo:            toDate(p.fecha_prestamo),
@@ -109,9 +121,11 @@ function formatPrestamo(p) {
 
 function formatReserva(r) {
   const libro = db.libros.find(l => l.id === r.libro_id)
+  const miembro = db.miembros.find(m => m.id === r.miembro_id)
   return {
     id:                            r.id,
     miembro_id:                    r.miembro_id,
+    miembro_nombre:                miembro?.nombre ?? null,
     libro_id:                      r.libro_id,
     libro_titulo:                  libro?.titulo ?? r.libro_titulo ?? null,
     fecha_reserva:                 toDate(r.fecha_reserva),
@@ -122,13 +136,15 @@ function formatReserva(r) {
 }
 
 function formatMulta(m) {
+  const miembro = db.miembros.find(me => me.id === m.miembro_id)
   return {
-    id:         m.id,
-    prestamo_id: m.prestamo_id,
-    miembro_id:  m.miembro_id,
-    monto:       m.monto,
-    pagada:      m.pagada,
-    fecha_pago:  toDate(m.fecha_pago),
+    id:              m.id,
+    prestamo_id:     m.prestamo_id,
+    miembro_id:      m.miembro_id,
+    miembro_nombre:  miembro?.nombre ?? null,
+    monto:           m.monto,
+    pagada:          m.pagada,
+    fecha_pago:      toDate(m.fecha_pago),
   }
 }
 

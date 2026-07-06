@@ -1,6 +1,17 @@
 // Router de multas.
 // Los socios consultan sus multas pendientes. El bibliotecario ve todas.
 
+// ──────────────────────────────────────────────────────────────────
+// AMPLIACION DEL ALCANCE ORIGINAL
+// El enunciado del caso pedia unicamente el frontend de una biblioteca
+// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
+// Mi Perfil y Mis Reservas), usando una API publica de conversion de
+// moneda para las multas. Este backend completo no formaba parte de
+// ese enunciado. Se conserva porque esta completamente integrado al
+// sistema y el equipo decidio mantenerlo como valor anadido del
+// proyecto, no porque haya sido requerido originalmente.
+// ──────────────────────────────────────────────────────────────────
+
 import { Router } from 'express'
 import Multa from '../models/Multa.js'
 import { verifyToken, requireRole } from '../middleware/auth.js'
@@ -10,10 +21,11 @@ const router = Router()
 
 function formatMulta(m) {
   return {
-    id:          m.id,
-    prestamo_id: m.prestamo?._id?.toString() ?? m.prestamo?.toString(),
-    miembro_id:  m.miembro?._id?.toString()  ?? m.miembro?.toString(),
-    monto:       m.monto,
+    id:              m.id,
+    prestamo_id:     m.prestamo?._id?.toString() ?? m.prestamo?.toString(),
+    miembro_id:      m.miembro?._id?.toString()  ?? m.miembro?.toString(),
+    miembro_nombre:  m.miembro?.nombre ?? null,
+    monto:           m.monto,
     pagada:      m.pagada,
     fecha_pago:  toDate(m.fecha_pago),
   }

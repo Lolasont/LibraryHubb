@@ -193,7 +193,7 @@ export default function LibroDetalle() {
   // Maneja la solicitud de prestamo.
   const handlePrestamo = async () => {
     setLoading(true)
-    const result = await solicitarPrestamo(null, libro.id)
+    const result = await solicitarPrestamo(libro.id)
     setLoading(false)
     showToast(result.mensaje, result.ok ? 'success' : 'error')
     if (result.ok) cargarDatos()
@@ -202,7 +202,7 @@ export default function LibroDetalle() {
   // Maneja la creacion de una reserva.
   const handleReserva = async () => {
     setLoading(true)
-    const result = await hacerReserva(null, libro.id)
+    const result = await hacerReserva(libro.id)
     setLoading(false)
     showToast(result.mensaje, result.ok ? 'success' : 'error')
     if (result.ok) cargarDatos()

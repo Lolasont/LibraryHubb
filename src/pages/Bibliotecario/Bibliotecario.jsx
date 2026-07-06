@@ -2,6 +2,15 @@
 // Muestra 4 metricas en la parte superior y un sistema de tabs
 // para ver prestamos, reservas, multas y miembros.
 
+// ──────────────────────────────────────────────────────────────────
+// AMPLIACION DEL ALCANCE ORIGINAL
+// El enunciado del caso pedia solo el rol de socio (5 vistas: Login,
+// Buscar Libros, Detalle de Libro, Mi Perfil y Mis Reservas). Este
+// panel para el rol "bibliotecario" no formaba parte de ese enunciado.
+// Se conserva porque esta completamente integrado al sistema de roles
+// y autenticacion, y el equipo decidio mantenerlo como valor anadido.
+// ──────────────────────────────────────────────────────────────────
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   getTodosPrestamos,
@@ -16,7 +25,7 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { Spinner } from '../../components/ui/Spinner'
 import { Toast } from '../../components/ui/Toast'
 import { useToast } from '../../hooks/useToast'
-import { formatDate, formatCLP, getMembresiaInfo } from '../../data/utils'
+import { formatDate, formatCLP } from '../../data/utils'
 import PropTypes from 'prop-types'
 import {
   ClipboardDocumentListIcon, BookmarkIcon, BanknotesIcon,
@@ -94,7 +103,10 @@ function TabPrestamos({ prestamos, onDevolucion }) {
             return (
               <tr key={p.id} className={`hover:bg-slate-50 transition-colors ${estado === 'vencido' ? 'bg-red-50/30' : ''}`}>
                 <td className="py-3 px-4 font-medium text-slate-800 max-w-[180px]"><span className="line-clamp-1">{p.libro_titulo}</span></td>
-                <td className="py-3 px-4 text-slate-500">#{p.miembro_id}</td>
+                <td className="py-3 px-4 text-slate-700">
+                  {p.miembro_nombre ?? `#${p.miembro_id}`}
+                  <span className="block text-[10px] text-slate-400 font-mono">#{p.miembro_id}</span>
+                </td>
                 <td className="py-3 px-4 text-slate-500">{formatDate(p.fecha_prestamo)}</td>
                 <td className="py-3 px-4 text-slate-500">{formatDate(p.fecha_devolucion_esperada)}</td>
                 <td className="py-3 px-4"><EstadoBadge prestamo={p} /></td>
@@ -143,7 +155,10 @@ function TabReservas({ reservas }) {
           {reservas.map(r => (
             <tr key={r.id} className="hover:bg-slate-50 transition-colors">
               <td className="py-3 px-4 font-medium text-slate-800 max-w-[180px]"><span className="line-clamp-1">{r.libro_titulo}</span></td>
-              <td className="py-3 px-4 text-slate-500">#{r.miembro_id}</td>
+              <td className="py-3 px-4 text-slate-700">
+                {r.miembro_nombre ?? `#${r.miembro_id}`}
+                <span className="block text-[10px] text-slate-400 font-mono">#{r.miembro_id}</span>
+              </td>
               <td className="py-3 px-4">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
                   #{r.posicion_cola} en cola
@@ -195,7 +210,10 @@ function TabMultas({ multas }) {
               <tr key={m.id} className="hover:bg-slate-50 transition-colors">
                 <td className="py-3 px-4 text-slate-500">#{m.id}</td>
                 <td className="py-3 px-4 text-slate-500">#{m.prestamo_id}</td>
-                <td className="py-3 px-4 text-slate-500">#{m.miembro_id}</td>
+                <td className="py-3 px-4 text-slate-700">
+                  {m.miembro_nombre ?? `#${m.miembro_id}`}
+                  <span className="block text-[10px] text-slate-400 font-mono">#{m.miembro_id}</span>
+                </td>
                 <td className="py-3 px-4 font-semibold text-red-700">{formatCLP(m.monto)}</td>
                 <td className="py-3 px-4"><Badge variant="danger">Pendiente</Badge></td>
               </tr>
@@ -228,36 +246,32 @@ function TabMiembros({ miembros }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-100">
-            {['Nombre', 'Cedula', 'Email', 'Membresia', 'Estado'].map(h => (
+            {['Nombre', 'Cedula', 'Email', 'Estado'].map(h => (
               <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 px-4">{h}</th>
             ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
-          {miembros.map(m => {
-            const { label, variant } = getMembresiaInfo(m.tipo_membresia)
-            return (
-              <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-2.5">
-                    {/* Inicial del nombre como avatar. */}
-                    <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-800">
-                      {m.nombre.charAt(0)}
-                    </div>
-                    <span className="font-medium text-slate-800">{m.nombre}</span>
+          {miembros.map(m => (
+            <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+              <td className="py-3 px-4">
+                <div className="flex items-center gap-2.5">
+                  {/* Inicial del nombre como avatar. */}
+                  <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-800">
+                    {m.nombre.charAt(0)}
                   </div>
-                </td>
-                <td className="py-3 px-4 text-slate-500 font-mono text-xs">{m.cedula}</td>
-                <td className="py-3 px-4 text-slate-500">{m.email ?? '—'}</td>
-                <td className="py-3 px-4"><Badge variant={variant}>{label}</Badge></td>
-                <td className="py-3 px-4">
-                  <Badge variant={m.estado === 'activo' ? 'success' : 'danger'}>
-                    {m.estado.charAt(0).toUpperCase() + m.estado.slice(1)}
-                  </Badge>
-                </td>
-              </tr>
-            )
-          })}
+                  <span className="font-medium text-slate-800">{m.nombre}</span>
+                </div>
+              </td>
+              <td className="py-3 px-4 text-slate-500 font-mono text-xs">{m.cedula}</td>
+              <td className="py-3 px-4 text-slate-500">{m.email ?? '—'}</td>
+              <td className="py-3 px-4">
+                <Badge variant={m.estado === 'activo' ? 'success' : 'danger'}>
+                  {m.estado.charAt(0).toUpperCase() + m.estado.slice(1)}
+                </Badge>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
@@ -269,9 +283,8 @@ TabMiembros.propTypes = {
     id:             PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     nombre:         PropTypes.string.isRequired,
     cedula:         PropTypes.string,
-    email:          PropTypes.string,
-    tipo_membresia: PropTypes.string,
-    estado:         PropTypes.string.isRequired,
+    email:  PropTypes.string,
+    estado: PropTypes.string.isRequired,
   })).isRequired,
 }
 

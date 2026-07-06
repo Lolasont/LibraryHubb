@@ -6,6 +6,15 @@
 // a recargas del navegador. El token vive en una clave aparte para
 // que apiService.js lo pueda leer sin necesidad de importar este contexto.
 
+// ──────────────────────────────────────────────────────────────────
+// AMPLIACION DEL ALCANCE ORIGINAL
+// El enunciado del caso no exigia autenticacion real ni manejo de roles;
+// bastaba con un frontend de consulta. El sistema de login con JWT y
+// roles (socio / bibliotecario) se agrego como ampliacion del alcance.
+// Se conserva porque esta completamente integrado al resto del sistema
+// (backend, rutas protegidas, panel del bibliotecario).
+// ──────────────────────────────────────────────────────────────────
+
 import { createContext, useContext, useMemo, useState, useCallback } from 'react'
 import PropTypes from 'prop-types'
 

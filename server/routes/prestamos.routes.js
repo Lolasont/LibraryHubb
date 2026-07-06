@@ -2,6 +2,17 @@
 // Endpoints para que los socios pidan, renueven y devuelvan libros.
 // El bibliotecario registra devoluciones y multas automaticas.
 
+// ──────────────────────────────────────────────────────────────────
+// AMPLIACION DEL ALCANCE ORIGINAL
+// El enunciado del caso pedia unicamente el frontend de una biblioteca
+// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
+// Mi Perfil y Mis Reservas), usando una API publica de conversion de
+// moneda para las multas. Este backend completo no formaba parte de
+// ese enunciado. Se conserva porque esta completamente integrado al
+// sistema y el equipo decidio mantenerlo como valor anadido del
+// proyecto, no porque haya sido requerido originalmente.
+// ──────────────────────────────────────────────────────────────────
+
 import { Router } from 'express'
 import Prestamo from '../models/Prestamo.js'
 import Libro from '../models/Libro.js'
@@ -18,6 +29,7 @@ function formatPrestamo(p) {
   return {
     id:                        p.id,
     miembro_id:                p.miembro?._id?.toString() ?? p.miembro?.toString(),
+    miembro_nombre:            p.miembro?.nombre ?? null,
     libro_id:                  p.libro?._id?.toString()   ?? p.libro?.toString(),
     libro_titulo:              p.libro?.titulo ?? null,
     fecha_prestamo:            toDate(p.fecha_prestamo),

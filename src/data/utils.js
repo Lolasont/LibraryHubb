@@ -1,6 +1,6 @@
 // Utilidades compartidas por varias paginas del frontend.
 // Son funciones puras (no hacen fetch, no usan estado) que se
-// reutilizan para formatear fechas, montos y membresias.
+// reutilizan para formatear fechas, montos y el estado de los prestamos.
 
 /**
  * Convierte una fecha a texto legible en espanol.
@@ -52,43 +52,24 @@ export function getDiasRestantes(dateStr) {
   return Math.ceil((venc - hoy) / (1000 * 60 * 60 * 24))
 }
 
-// Tasas de cambio aproximadas desde CLP.
-// NOTA: en produccion conviene reemplazarlas por una llamada real
-// a una API de cotizacion (por ejemplo open.er-api.com).
-export const TASAS_CAMBIO = {
-  CLP: { simbolo: '$',   nombre: 'Peso Chileno',   tasa: 1       },
-  USD: { simbolo: 'US$', nombre: 'Dolar (USD)',    tasa: 0.00105 },
-  EUR: { simbolo: '€',   nombre: 'Euro (EUR)',     tasa: 0.00097 },
-  ARS: { simbolo: 'AR$', nombre: 'Peso Argentino', tasa: 1.05    },
-}
-
 /**
- * Convierte un monto en CLP a otra moneda.
- * Devuelve un objeto con el monto convertido y su representacion formateada.
+ * Calcula el estado visual de un prestamo ('vencido' | 'alerta' | 'activo')
+ * segun los dias restantes hasta la fecha de devolucion esperada.
+ * Reutiliza getDiasRestantes para no duplicar la logica de diferencia de fechas
+ * (antes vivia en mockService.js, con su propio calculo de fechas).
+ *
+ * Nota: la version original tambien revisaba prestamo.estado === 'vencido'
+ * y === 'devuelto' antes de mirar las fechas. Se verificó que ambas ramas
+ * eran inalcanzables en la practica: el backend nunca asigna 'vencido' como
+ * estado (solo 'activo'/'devuelto'), y los listados de prestamos siempre
+ * excluyen los que ya tienen estado 'devuelto' antes de llegar aqui. Por eso
+ * se simplifica a un calculo puro por fecha, sin cambiar el comportamiento.
+ * Umbral de alerta: 5 dias o menos (igual que el original).
  */
-export function convertirCLP(montoCLP, codigoDestino) {
-  const info = TASAS_CAMBIO[codigoDestino]
-  if (!info) return null
-  const convertido = montoCLP * info.tasa
-  return {
-    monto: convertido,
-    formateado:
-      codigoDestino === 'CLP'
-        ? formatCLP(montoCLP)
-        : `${info.simbolo} ${convertido.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    nombre: info.nombre,
-  }
-}
-
-/**
- * Devuelve la etiqueta y la variante de color para mostrar
- * el tipo de membresia de un socio.
- */
-export function getMembresiaInfo(tipo) {
-  const map = {
-    basica:     { label: 'Basica',     variant: 'info'       },
-    premium:    { label: 'Premium',    variant: 'premium'    },
-    estudiante: { label: 'Estudiante', variant: 'estudiante' },
-  }
-  return map[tipo] ?? { label: tipo, variant: 'default' }
+export function getEstadoPrestamo(prestamo) {
+  const dias = getDiasRestantes(prestamo?.fecha_devolucion_esperada)
+  if (dias === null) return 'activo'
+  if (dias < 0) return 'vencido'
+  if (dias <= 5) return 'alerta'
+  return 'activo'
 }

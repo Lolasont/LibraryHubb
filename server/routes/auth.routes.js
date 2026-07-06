@@ -2,6 +2,17 @@
 // Hoy solo expone el endpoint de login.
 // Devuelve un JWT + los datos del usuario (sin contrasena) que el frontend guarda.
 
+// ──────────────────────────────────────────────────────────────────
+// AMPLIACION DEL ALCANCE ORIGINAL
+// El enunciado del caso pedia unicamente el frontend de una biblioteca
+// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
+// Mi Perfil y Mis Reservas), usando una API publica de conversion de
+// moneda para las multas. Este backend completo no formaba parte de
+// ese enunciado. Se conserva porque esta completamente integrado al
+// sistema y el equipo decidio mantenerlo como valor anadido del
+// proyecto, no porque haya sido requerido originalmente.
+// ──────────────────────────────────────────────────────────────────
+
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
 import Miembro from '../models/Miembro.js'

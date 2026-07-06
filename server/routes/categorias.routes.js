@@ -1,6 +1,17 @@
 // Router de categorias.
 // Lista todas las categorias de libros que existen en el sistema.
 
+// ──────────────────────────────────────────────────────────────────
+// AMPLIACION DEL ALCANCE ORIGINAL
+// El enunciado del caso pedia unicamente el frontend de una biblioteca
+// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
+// Mi Perfil y Mis Reservas), usando una API publica de conversion de
+// moneda para las multas. Este backend completo no formaba parte de
+// ese enunciado. Se conserva porque esta completamente integrado al
+// sistema y el equipo decidio mantenerlo como valor anadido del
+// proyecto, no porque haya sido requerido originalmente.
+// ──────────────────────────────────────────────────────────────────
+
 import { Router } from 'express'
 import Categoria from '../models/Categoria.js'
 import { verifyToken } from '../middleware/auth.js'

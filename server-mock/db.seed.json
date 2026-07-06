@@ -72,7 +72,7 @@
       "password_hash": "$2a$10$Uu7mk0cYOnPqfOtkeiNm6efT7YDmkA286e7V.coUcEzwNQstBpb0y",
       "nombre": "Juan Perez", "email": "juan@example.com",
       "direccion": "Av. Principal 123, Santiago", "telefono": "+56 9 1234 5678",
-      "tipo_membresia": "basica", "estado": "activo", "rol": "miembro",
+      "tipo_membresia": null, "estado": "activo", "rol": "miembro",
       "fecha_registro": "2023-01-15"
     },
     {
@@ -80,7 +80,7 @@
       "password_hash": "$2a$10$b2/rUjxH8QPqbbaBjJaXteGFq5OC8zgd8tRwxlvvGIJQZhzduEpBi",
       "nombre": "Maria Garcia", "email": "maria@example.com",
       "direccion": "Calle Los Alamos 456, Providencia", "telefono": "+56 9 9876 5432",
-      "tipo_membresia": "premium", "estado": "activo", "rol": "miembro",
+      "tipo_membresia": null, "estado": "activo", "rol": "miembro",
       "fecha_registro": "2022-08-20"
     },
     {
@@ -88,7 +88,7 @@
       "password_hash": "$2a$10$ekGLvPfKSnc5OMf7r.DYF.eTzYV6w.DzAIhFfe9kwZv9/bOPdK.rO",
       "nombre": "Carlos Lopez", "email": "carlos@example.com",
       "direccion": "Pasaje Sur 789, Las Condes", "telefono": "+56 9 5555 1234",
-      "tipo_membresia": "estudiante", "estado": "activo", "rol": "miembro",
+      "tipo_membresia": null, "estado": "activo", "rol": "miembro",
       "fecha_registro": "2024-03-10"
     },
     {
@@ -96,7 +96,7 @@
       "password_hash": "$2a$10$R3ignkv1qziYqoKq1faaf.n2aZRdZXG1MDNEELkoxgyurkcHgQ/FK",
       "nombre": "Ana Rodriguez", "email": "ana@example.com",
       "direccion": "Blvd. Norte 321, Nunoa", "telefono": "+56 9 7777 8888",
-      "tipo_membresia": "basica", "estado": "activo", "rol": "miembro",
+      "tipo_membresia": null, "estado": "activo", "rol": "miembro",
       "fecha_registro": "2023-11-05"
     },
     {
@@ -104,7 +104,7 @@
       "password_hash": "$2a$10$8S4Uu4qGC5/ZGk7jVBLRqOO2Wkb9QhG9Wd4QL8me2mUHX04Ly0dam",
       "nombre": "Luis Martinez", "email": "luis@example.com",
       "direccion": "Villa del Sol 654, Maipu", "telefono": "+56 9 3333 4444",
-      "tipo_membresia": "premium", "estado": "activo", "rol": "miembro",
+      "tipo_membresia": null, "estado": "activo", "rol": "miembro",
       "fecha_registro": "2021-06-30"
     },
     {

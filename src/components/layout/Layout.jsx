@@ -6,7 +6,6 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import PropTypes from 'prop-types'
 import {
   BookOpenIcon,
   UserIcon,
@@ -29,21 +28,6 @@ const MENU_BIBLIOTECARIO = [
   { path: '/libros',        label: 'Catalogo',         icon: BookOpenIcon },
   { path: '/bibliotecario', label: 'Panel de control', icon: BuildingLibraryIcon },
 ]
-
-// Pequeno badge de membresia que aparece en la sidebar junto al nombre del socio.
-function MembresiaLabel({ tipo }) {
-  const map = {
-    basica:     { label: 'Basica',     color: 'text-blue-300' },
-    premium:    { label: 'Premium',    color: 'text-amber-400' },
-    estudiante: { label: 'Estudiante', color: 'text-cyan-400' },
-  }
-  const { label, color } = map[tipo] ?? { label: tipo, color: 'text-blue-300' }
-  return <span className={`text-xs ${color}`}>Membresia {label}</span>
-}
-
-MembresiaLabel.propTypes = {
-  tipo: PropTypes.string,
-}
 
 export default function Layout() {
   const { user, logout } = useAuth()
@@ -121,7 +105,7 @@ export default function Layout() {
               <p className="text-sm font-semibold text-white truncate">{user?.nombre}</p>
               {user?.rol === 'bibliotecario'
                 ? <span className="text-xs text-amber-400">Bibliotecario</span>
-                : <MembresiaLabel tipo={user?.tipo_membresia} />
+                : <span className="text-xs text-blue-300">Socio</span>
               }
             </div>
           </div>

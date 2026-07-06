@@ -7,17 +7,15 @@ import PropTypes from 'prop-types'
 
 /**
  * Badge — indicador visual de estado.
- * Variantes disponibles: success, danger, warning, info, default, premium, estudiante.
+ * Variantes disponibles: success, danger, warning, info, default.
  */
 export function Badge({ variant = 'default', children, className = '' }) {
   const variants = {
-    success:    'bg-green-100 text-green-800',
-    danger:     'bg-red-100 text-red-800',
-    warning:    'bg-amber-100 text-amber-800',
-    info:       'bg-blue-100 text-blue-800',
-    default:    'bg-slate-100 text-slate-700',
-    premium:    'bg-purple-100 text-purple-800',
-    estudiante: 'bg-cyan-100 text-cyan-800',
+    success: 'bg-green-100 text-green-800',
+    danger:  'bg-red-100 text-red-800',
+    warning: 'bg-amber-100 text-amber-800',
+    info:    'bg-blue-100 text-blue-800',
+    default: 'bg-slate-100 text-slate-700',
   }
 
   return (

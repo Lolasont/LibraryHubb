@@ -1,7 +1,6 @@
 // Pagina de perfil del socio.
 // Muestra sus datos personales, los prestamos activos (con un
-// semaforo de vencimiento) y las multas pendientes (con un
-// convertidor de CLP a otras monedas).
+// semaforo de vencimiento) y las multas pendientes.
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
@@ -11,7 +10,6 @@ import {
   renovarPrestamo,
   getEstadoPrestamo,
 } from '../../data/apiService'
-import { Badge } from '../../components/ui/Badge'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { Spinner } from '../../components/ui/Spinner'
 import { Toast } from '../../components/ui/Toast'
@@ -19,7 +17,6 @@ import { useToast } from '../../hooks/useToast'
 import PropTypes from 'prop-types'
 import {
   formatDate, formatCLP, getDiasRestantes,
-  getMembresiaInfo, TASAS_CAMBIO, convertirCLP,
 } from '../../data/utils'
 import {
   UserCircleIcon, EnvelopeIcon, PhoneIcon, MapPinIcon,
@@ -78,28 +75,6 @@ InfoRow.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 }
 
-// Mini widget para convertir un monto de CLP a otra moneda.
-function ConvertidorMultas({ montoCLP }) {
-  const [moneda, setMoneda] = useState('CLP')
-  const resultado = convertirCLP(montoCLP, moneda)
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-lg font-bold text-red-600">{resultado?.formateado}</span>
-      <select value={moneda} onChange={e => setMoneda(e.target.value)}
-        className="text-xs border border-slate-200 rounded px-2 py-1 bg-white text-slate-600 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400"
-      >
-        {Object.entries(TASAS_CAMBIO).map(([code, info]) => (
-          <option key={code} value={code}>{code} - {info.nombre}</option>
-        ))}
-      </select>
-    </div>
-  )
-}
-
-ConvertidorMultas.propTypes = {
-  montoCLP: PropTypes.number.isRequired,
-}
-
 export default function MiPerfil() {
   const { user } = useAuth()
   const { toast, showToast, hideToast } = useToast()
@@ -135,7 +110,6 @@ export default function MiPerfil() {
   }
 
   // Calculamos el total de multas para mostrarlo si hay mas de una.
-  const { label: membresiaLabel, variant: membresiaVariant } = getMembresiaInfo(user.tipo_membresia)
   const totalMultas = multas.reduce((sum, m) => sum + m.monto, 0)
   const prestamosCount = prestamos.length
   const prestamosPlural = prestamosCount === 1 ? '' : 's'
@@ -217,7 +191,6 @@ export default function MiPerfil() {
               </div>
               <h2 className="font-semibold text-slate-900">{user.nombre}</h2>
               <p className="text-xs text-slate-500 mt-0.5">Cedula: {user.cedula}</p>
-              <Badge variant={membresiaVariant} className="mt-2">Membresia {membresiaLabel}</Badge>
             </div>
             <div className="pt-4">
               <InfoRow icon={EnvelopeIcon}     label="Correo electronico" value={user.email} />
@@ -238,7 +211,7 @@ export default function MiPerfil() {
                 {multas.map(multa => (
                   <div key={multa.id} className="bg-white rounded-lg border border-red-200 p-3">
                     <p className="text-xs text-slate-500 mb-1">Prestamo #{multa.prestamo_id}</p>
-                    <ConvertidorMultas montoCLP={multa.monto} />
+                    <p className="text-lg font-bold text-red-600">{formatCLP(multa.monto)}</p>
                   </div>
                 ))}
               </div>

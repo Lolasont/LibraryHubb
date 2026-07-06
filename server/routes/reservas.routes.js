@@ -2,6 +2,17 @@
 // Permite a los socios anotarse en la cola de espera de un libro
 // que no tiene copias disponibles, y cancelar reservas propias.
 
+// ──────────────────────────────────────────────────────────────────
+// AMPLIACION DEL ALCANCE ORIGINAL
+// El enunciado del caso pedia unicamente el frontend de una biblioteca
+// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
+// Mi Perfil y Mis Reservas), usando una API publica de conversion de
+// moneda para las multas. Este backend completo no formaba parte de
+// ese enunciado. Se conserva porque esta completamente integrado al
+// sistema y el equipo decidio mantenerlo como valor anadido del
+// proyecto, no porque haya sido requerido originalmente.
+// ──────────────────────────────────────────────────────────────────
+
 import { Router } from 'express'
 import Reserva from '../models/Reserva.js'
 import Libro from '../models/Libro.js'
@@ -15,6 +26,7 @@ function formatReserva(r) {
   return {
     id:                            r.id,
     miembro_id:                    r.miembro?._id?.toString() ?? r.miembro?.toString(),
+    miembro_nombre:                r.miembro?.nombre ?? null,
     libro_id:                      r.libro?._id?.toString()   ?? r.libro?.toString(),
     libro_titulo:                  r.libro?.titulo ?? null,
     fecha_reserva:                 toDate(r.fecha_reserva),

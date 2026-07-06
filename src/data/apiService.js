@@ -1,11 +1,11 @@
-// Capa de servicios que habla con el backend real.
-// Tiene exactamente las mismas firmas que mockService.js, asi las
-// paginas pueden cambiar de mock a API sin tocarse para nada.
+// Capa de servicios que habla con el backend real (server/ o server-mock/).
+// Es la unica capa que hace fetch: las paginas siempre importan desde aca,
+// nunca llaman a fetch directamente.
 //
 // La URL de la API se toma de la variable VITE_API_URL del archivo .env
 // de la raiz. Si no esta, usa el mismo valor por defecto que teniamos.
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5001/api'
 
 // Lee el JWT que AuthContext guardo en el localStorage al iniciar sesion.
 function getToken() {
@@ -84,11 +84,11 @@ export async function getTodosPrestamos() {
 
 /**
  * Solicita un prestamo para el usuario autenticado.
- * @param {null} _miembro_id - No se usa: el backend obtiene al miembro del JWT.
- *   Se mantiene el parametro para conservar la misma firma que mockService.js.
+ * El backend obtiene al miembro directamente del JWT, por eso la funcion
+ * solo necesita el id del libro.
  * @param {string} libro_id
  */
-export async function solicitarPrestamo(_miembro_id, libro_id) {
+export async function solicitarPrestamo(libro_id) {
   try {
     return await request('/prestamos', { method: 'POST', body: { libro_id } })
   } catch (err) {
@@ -128,10 +128,10 @@ export async function getTodasReservas() {
 
 /**
  * Crea una reserva para el usuario autenticado.
- * @param {null} _miembro_id - Se conserva la firma de mockService.js.
+ * El backend obtiene al miembro directamente del JWT.
  * @param {string} libro_id
  */
-export async function hacerReserva(_miembro_id, libro_id) {
+export async function hacerReserva(libro_id) {
   try {
     return await request('/reservas', { method: 'POST', body: { libro_id } })
   } catch (err) {
@@ -164,6 +164,7 @@ export async function getMiembros() {
 }
 
 // ─── UTILIDADES (sin cambios — no dependen del backend) ───────
-// Reexportamos getEstadoPrestamo desde mockService.js porque es logica pura
-// que no tiene sentido duplicar.
-export { getEstadoPrestamo } from './mockService.js'
+// getEstadoPrestamo es logica pura (no hace fetch), por eso vive en utils.js
+// junto al resto de los helpers de formato. Se reexporta aqui para que las
+// paginas puedan seguir importandola desde apiService.js sin tocar sus imports.
+export { getEstadoPrestamo } from './utils.js'

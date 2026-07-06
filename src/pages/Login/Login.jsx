@@ -53,9 +53,9 @@ const STATS = [
 // datos de la semilla de demostracion, no secretos reales. Facilitan
 // la evaluacion del proyecto. NO usar este patron en un sistema en produccion.
 const DEMO_CREDS = [
-  { rol: 'Miembro basico',  cedula: '12345678', pass: '12345678' },
-  { rol: 'Miembro premium', cedula: '23456789', pass: '23456789' },
-  { rol: 'Bibliotecario',   cedula: '00000001', pass: 'admin'    },
+  { rol: 'Socio',         cedula: '12345678', pass: '12345678' },
+  { rol: 'Socio',         cedula: '23456789', pass: '23456789' },
+  { rol: 'Bibliotecario', cedula: '00000001', pass: 'admin'    },
 ]
 
 export default function Login() {
