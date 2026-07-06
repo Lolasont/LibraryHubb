@@ -63,6 +63,14 @@ libraryhub/
 │   │   ├── multas.routes.js
 │   │   └── miembros.routes.js
 │   └── utils/format.js
+├── server-mock/              ← backend alternativo (json-server, sin MongoDB)
+│   ├── index.js
+│   ├── db.json               ← estado actual (se muta con el uso)
+│   ├── db.seed.json          ← estado inicial
+│   ├── reset.js              ← restaura db.json desde db.seed.json
+│   ├── .env.example
+│   ├── middleware/auth.js
+│   └── utils/format.js
 └── src/                      ← frontend React
     ├── main.jsx
     ├── App.jsx
@@ -217,3 +225,57 @@ de las funciones que necesites para que apunten a `./mockService.js`.
 - **Copias disponibles:** se actualiza con `$inc` en Mongo al prestar/devolver.
 - **Contrasenas:** se hashean con bcrypt antes de guardarse (10 rondas).
 - **Busqueda:** escapa caracteres especiales de regex para evitar inyecciones.
+
+---
+
+## Plan B: API alternativa sin MongoDB
+
+Ademas del backend oficial (Express + MongoDB en `server/`), el proyecto
+incluye un backend alternativo en `server-mock/` que persiste en un
+archivo `db.json` en disco. Esta pensado para correr el frontend sin
+necesidad de tener MongoDB levantado (demos, debugging, evaluaciones sin
+dependencias externas).
+
+### Como levantarlo
+
+```bash
+# Terminal 1 — Plan B
+cd server-mock
+npm install
+npm run dev          # http://localhost:5001
+
+# Terminal 2 — frontend (siempre el mismo)
+cd "libraryhub"
+npm run dev          # http://localhost:5173
+```
+
+Y en `.env` (raiz del frontend), comentar la linea del backend Mongo y
+descomentar la del Plan B:
+
+```env
+# Backend oficial (Mongo):
+# VITE_API_URL=http://localhost:5000/api
+# Plan B (json-server, sin Mongo):
+VITE_API_URL=http://localhost:5001/api
+```
+
+Reiniciar Vite para que tome el nuevo valor.
+
+### Caracteristicas
+
+- **Mismas rutas** que el backend de Mongo: `/api/auth/login`,
+  `/api/libros`, `/api/prestamos`, `/api/reservas`, `/api/multas`,
+  `/api/miembros`, `/api/categorias`.
+- **Mismas formas de respuesta**: el frontend no nota la diferencia.
+- **Misma `JWT_SECRET`**: un token firmado por un backend es valido en el
+  otro, asi se puede alternar sin reloguear.
+- **Persistencia inmediata** en `db.json`. A diferencia de `mockService.js`
+  (que era mock en memoria del navegador), este backend mantiene los
+  cambios al recargar la pagina.
+- **Reset a estado inicial** con `npm run reset` (en `server-mock/`).
+
+### Volver al backend Mongo
+
+Solo cambiar el `.env` y reiniciar Vite. No requiere reinstalar nada.
+
+Mas detalles en `server-mock/README.md`.
