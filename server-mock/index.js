@@ -77,7 +77,12 @@ function nextId(coleccion, prefijo) {
 const app = express()
 app.disable('x-powered-by')
 
-app.use(cors({ origin: 'http://localhost:5173' }))
+// CORS abierto: aceptamos peticiones desde cualquier origen (localhost, tuneles
+// de VS Code, deploys publicos, etc.). El backend no usa cookies de sesion —
+// la auth va por JWT en el header Authorization — asi que no hay riesgo de
+// CSRF por relajar el origin. Si mas adelante se anade auth por cookies,
+// habra que volver a la lista blanca.
+app.use(cors({ origin: '*' }))
 app.use(express.json())
 
 // ── Helpers de formato ─────────────────────────────────────
@@ -398,7 +403,7 @@ app.post('/api/reservas', verifyToken, (req, res) => {
   }
 
   // No se puede reservar dos veces el mismo libro.
-  const yaReservado = db.reservas.find(
+  const yaReservado = db.reservas.some(
     r => r.miembro_id === req.user.id && r.libro_id === libro_id && r.estado === 'reservado'
   )
   if (yaReservado) {

@@ -5,7 +5,12 @@
 // La URL de la API se toma de la variable VITE_API_URL del archivo .env
 // de la raiz. Si no esta, usa el mismo valor por defecto que teniamos.
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5001/api'
+// Normalizamos la URL base para que no importe si el .env la pone con o sin
+// /api al final, o con un slash extra al final. Sin esto, al cambiar de
+// backend (tunel, deploy, localhost) es facil terminar con rutas tipo
+// `https://host//auth/login` por una barra de mas o de menos.
+const rawBase = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '')
+const API_URL = `${rawBase}/api`
 
 // Lee el JWT que AuthContext guardo en el localStorage al iniciar sesion.
 function getToken() {

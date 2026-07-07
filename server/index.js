@@ -32,9 +32,12 @@ app.disable('x-powered-by')
 const PORT = process.env.PORT ?? 5000
 
 // ── Middlewares globales ───────────────────────────────────
-// CORS permite que el frontend (que corre en localhost:5173) pueda hacer
-// peticiones a este backend (localhost:5000).
-app.use(cors({ origin: 'http://localhost:5173' }))
+// CORS abierto: aceptamos peticiones desde cualquier origen (localhost, tuneles
+// de VS Code, deploys publicos, etc.). El backend no usa cookies de sesion —
+// la auth va por JWT en el header Authorization — asi que no hay riesgo de
+// CSRF por relajar el origin. Si mas adelante se anade auth por cookies,
+// habra que volver a la lista blanca.
+app.use(cors({ origin: '*' }))
 // Habilita el parseo automatico de JSON en el body de las peticiones.
 app.use(express.json())
 
