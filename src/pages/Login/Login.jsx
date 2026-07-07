@@ -149,7 +149,7 @@ export default function Login() {
           </div>
 
           <h2 className="text-2xl font-display font-bold text-slate-900 mb-1">Iniciar sesion</h2>
-          <p className="text-slate-500 text-sm mb-8">Ingresa con tu numero de cedula y contrasena</p>
+          <p className="text-slate-500 text-sm mb-8">Ingresa con tu numero de cedula y contraseña</p>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
 
@@ -167,7 +167,7 @@ export default function Login() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Contrasena
+                Contraseña
               </label>
               <div className="relative">
                 <input
@@ -176,10 +176,10 @@ export default function Login() {
                   placeholder="********"
                   className="input-field pr-11" autoComplete="current-password" required
                 />
-                {/* Boton para mostrar u ocultar la contrasena. */}
+                {/* Boton para mostrar u ocultar la contraseña. */}
                 <button type="button" onClick={() => setShowPassword(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                   {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
                 </button>
