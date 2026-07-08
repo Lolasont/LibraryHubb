@@ -9,7 +9,12 @@
 // /api al final, o con un slash extra al final. Sin esto, al cambiar de
 // backend (tunel, deploy, localhost) es facil terminar con rutas tipo
 // `https://host//auth/login` por una barra de mas o de menos.
-const rawBase = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '')
+let rawBase = import.meta.env.VITE_API_URL ?? 'http://localhost:5001'
+// Elimina las barras finales sin usar una expresión regular para evitar
+// posibles problemas de rendimiento en algunos linters/entornos.
+while (rawBase.endsWith('/')) {
+  rawBase = rawBase.slice(0, -1)
+}
 const API_URL = `${rawBase}/api`
 
 // Lee el JWT que AuthContext guardo en el localStorage al iniciar sesion.
