@@ -23,6 +23,19 @@ function api() {
   return window.libraryHub
 }
 
+// Varios canales IPC devuelven una lista en el caso normal, pero un
+// objeto { ok: false, mensaje } cuando algo sale mal (por ejemplo, si la
+// sesion del lado de Electron todavia no se restauro — ver
+// restaurarSesion mas arriba). Las paginas hacen .map() directo sobre el
+// resultado, asi que si llegara a colarse ese objeto de error en vez de
+// un array, la interfaz se rompe con un TypeError poco claro. Esta
+// funcion normaliza cualquier resultado que no sea un array a una lista
+// vacia, para que la pagina simplemente no muestre nada en vez de
+// explotar.
+function comoLista(data) {
+  return Array.isArray(data) ? data : []
+}
+
 // ─── AUTH ────────────────────────────────────────────────────
 
 /**
@@ -37,16 +50,29 @@ export async function loginUsuario(cedula, password) {
   return { user: data.user, token: null }
 }
 
+/**
+ * Vuelve a avisarle al proceso principal de Electron quien esta logueado,
+ * usando el id guardado en localStorage. Hace falta porque la sesion
+ * "real" vive en memoria del lado de Electron (no en un token), y esa
+ * memoria puede perderse (recarga de la ventana, reinicio) mientras el
+ * renderer todavia recuerda al usuario.
+ * @param {string} userId
+ * @returns {Promise<{ ok: boolean, user?: object, mensaje?: string }>}
+ */
+export async function restaurarSesion(userId) {
+  return api().restaurarSesion(userId)
+}
+
 // ─── CATEGORIAS ──────────────────────────────────────────────
 
 export async function getCategorias() {
-  return api().getCategorias()
+  return comoLista(await api().getCategorias())
 }
 
 // ─── LIBROS ──────────────────────────────────────────────────
 
 export async function getLibros({ busqueda = '', categoria_id = null } = {}) {
-  return api().getLibros({ busqueda, categoria_id })
+  return comoLista(await api().getLibros({ busqueda, categoria_id }))
 }
 
 export async function getLibroById(id) {
@@ -59,11 +85,11 @@ export async function getLibroById(id) {
 // ─── PRESTAMOS ───────────────────────────────────────────────
 
 export async function getPrestamosActivos() {
-  return api().getPrestamosActivos()
+  return comoLista(await api().getPrestamosActivos())
 }
 
 export async function getTodosPrestamos() {
-  return api().getTodosPrestamos()
+  return comoLista(await api().getTodosPrestamos())
 }
 
 /**
@@ -85,15 +111,15 @@ export async function registrarDevolucion(prestamo_id) {
 // ─── RESERVAS ────────────────────────────────────────────────
 
 export async function getReservasByMiembro() {
-  return api().getReservasByMiembro()
+  return comoLista(await api().getReservasByMiembro())
 }
 
 export async function getReservasByLibro(libro_id) {
-  return api().getReservasByLibro(libro_id)
+  return comoLista(await api().getReservasByLibro(libro_id))
 }
 
 export async function getTodasReservas() {
-  return api().getTodasReservas()
+  return comoLista(await api().getTodasReservas())
 }
 
 /**
@@ -111,17 +137,17 @@ export async function cancelarReserva(reserva_id) {
 // ─── MULTAS ──────────────────────────────────────────────────
 
 export async function getMultasByMiembro() {
-  return api().getMultasByMiembro()
+  return comoLista(await api().getMultasByMiembro())
 }
 
 export async function getTodasMultas() {
-  return api().getTodasMultas()
+  return comoLista(await api().getTodasMultas())
 }
 
 // ─── MIEMBROS (para el bibliotecario) ────────────────────────
 
 export async function getMiembros() {
-  return api().getMiembros()
+  return comoLista(await api().getMiembros())
 }
 
 // ─── UTILIDADES (sin cambios — no dependen del backend) ───────

@@ -2,17 +2,6 @@
 // Un prestamo representa un libro que un socio se llevo y que tiene
 // que devolver antes de la fecha_devolucion_esperada.
 
-// ──────────────────────────────────────────────────────────────────
-// AMPLIACION DEL ALCANCE ORIGINAL
-// El enunciado del caso pedia unicamente el frontend de una biblioteca
-// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
-// Mi Perfil y Mis Reservas), usando una API publica de conversion de
-// moneda para las multas. Este backend completo no formaba parte de
-// ese enunciado. Se conserva porque esta completamente integrado al
-// sistema y el equipo decidio mantenerlo como valor anadido del
-// proyecto, no porque haya sido requerido originalmente.
-// ──────────────────────────────────────────────────────────────────
-
 import { Schema, model } from 'mongoose'
 
 const prestamoSchema = new Schema(
@@ -27,6 +16,8 @@ const prestamoSchema = new Schema(
     fecha_devolucion:          { type: Date, default: null },
     // Estado del prestamo. "vencido" lo calcula el frontend al comparar fechas.
     estado:                    { type: String, enum: ['activo', 'devuelto', 'vencido'], default: 'activo' },
+    // Contador de renovaciones. El service limita a MAX_RENOVACIONES (2).
+    renovaciones:              { type: Number, default: 0, min: 0 },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 )

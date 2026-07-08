@@ -17,13 +17,8 @@
 ## Descripción
 
 LibraryHub es una aplicación de escritorio para la gestión de préstamos,
-reservas y multas de una biblioteca municipal. Nació como proyecto
-académico —el enunciado original pedía únicamente el frontend de
-consulta— pero evolucionó hacia un sistema completo: incluye un backend
-propio con autenticación por roles, un panel de administración para
-bibliotecarios y se ejecuta como aplicación de escritorio con
-**Electron**, comunicándose con MongoDB a través de **IPC** (mensajería
-interna de Electron) en lugar de un servidor HTTP.
+reservas y multas de una biblioteca municipal, construida con React y
+Electron, con MongoDB como base de datos.
 
 El proyecto está pensado para que **dos tipos de usuario** lo usen de
 forma distinta:
@@ -47,7 +42,6 @@ forma distinta:
 - [Autenticación y autorización](#autenticación-y-autorización)
 - [Variables de entorno](#variables-de-entorno)
 - [Scripts disponibles](#scripts-disponibles)
-- [Alcance y decisiones de diseño](#alcance-y-decisiones-de-diseño)
 
 ---
 
@@ -70,28 +64,27 @@ administración con métricas y gestión operativa (ver
 ## Arquitectura
 
 LibraryHub corre como una **aplicación de escritorio** dentro de
-Electron. El proceso principal de Electron se conecta a MongoDB
-directamente, expone la lógica de negocio a través de canales IPC, y el
-frontend React se comunica con él mediante `window.libraryHub`
-(expuesto por el preload). No hay servidor HTTP, no hay token JWT, no
-hay un puerto abierto en la red.
+Electron. El proceso principal se conecta a MongoDB directamente,
+expone la lógica de negocio a través de canales IPC, y el frontend
+React se comunica con él mediante `window.libraryHub` (expuesto por el
+preload).
 
 ```
 ┌──────────────────────┐
 │  Renderer (React)    │
-│  pages → apiService  │
+│  pages → apiService   │
 └──────────┬───────────┘
            │ window.libraryHub.algo()
            ▼
 ┌──────────────────────┐
-│  preload.cjs         │  contextBridge + ipcRenderer
+│  preload.cjs          │  contextBridge + ipcRenderer
 └──────────┬───────────┘
            │ ipcRenderer.invoke('canal')
            ▼
 ┌──────────────────────┐
-│  main.cjs            │  ipcMain.handle('canal', handler)
-│  └─ services/*.js    │  lógica de negocio (Mongoose)
-│  └─ sesion.service   │  usuarioActual en memoria
+│  main.cjs              │  ipcMain.handle('canal', handler)
+│  └─ services/*.js      │  lógica de negocio (Mongoose)
+│  └─ sesion.service     │  usuarioActual en memoria
 └──────────┬───────────┘
            │ Mongoose
            ▼
@@ -103,9 +96,7 @@ El frontend **desconoce por completo** la existencia de MongoDB: las
 páginas de React (`Login`, `Libros`, `LibroDetalle`, `MiPerfil`,
 `MisReservas`, `Bibliotecario`) nunca tocan la base de datos
 directamente. Toda la comunicación pasa por `apiService.js`, que
-delega en `window.libraryHub`. Las páginas no se enteraron de la
-migración de Express a IPC: la fachada pública de `apiService.js` se
-preservó idéntica.
+delega en `window.libraryHub`.
 
 ### Ciclo de vida de una acción
 
@@ -130,13 +121,13 @@ libro.
 
 ## Stack tecnológico
 
-| Capa             | Tecnologías                                                |
-| ---------------- | ---------------------------------------------------------- |
-| **Frontend**     | React 19 · Vite · React Router · Tailwind CSS · Heroicons  |
-| **Escritorio**   | Electron 43 (proceso principal + preload)                  |
-| **Backend**      | Node.js · Mongoose · bcrypt · dotenv                       |
-| **Base de datos**| MongoDB (instancia local en `localhost:27017/libraryhub`)  |
-| **Calidad**      | oxlint                                                     |
+| Capa               | Tecnologías                                                |
+| ------------------ | ----------------------------------------------------------- |
+| **Frontend**        | React 19 · Vite · React Router · Tailwind CSS · Heroicons   |
+| **Escritorio**      | Electron 43 (proceso principal + preload)                   |
+| **Backend**         | Node.js · Mongoose · bcrypt · dotenv                         |
+| **Base de datos**   | MongoDB (instancia local en `localhost:27017/libraryhub`)   |
+| **Calidad**         | oxlint                                                       |
 
 ---
 
@@ -152,7 +143,7 @@ LibraryHub/
 │   │   ├── ui/                     # Componentes reutilizables
 │   │   └── bibliotecario/          # Tabs del panel del bibliotecario
 │   ├── context/
-│   │   └── AuthContext.jsx         # Estado de sesión (solo user, sin token)
+│   │   └── AuthContext.jsx         # Estado de sesión del usuario
 │   ├── data/
 │   │   ├── apiService.js           # Delega en window.libraryHub (IPC)
 │   │   └── utils.js                # Formateo de fechas, montos y estados
@@ -162,8 +153,8 @@ LibraryHub/
 ├── server/                         # Lógica de negocio + conexión MongoDB
 │   ├── config/db.js                # conectarDB() (Mongoose)
 │   ├── models/                     # Esquemas de Mongoose
-│   ├── services/                   # Lógica de negocio (sin Express)
-│   │   ├── auth.service.js         # login() — setea usuarioActual
+│   ├── services/                   # Lógica de negocio
+│   │   ├── auth.service.js         # login(), restaurarSesion()
 │   │   ├── sesion.service.js       # get/setUsuarioActual, requerirSesion/Rol
 │   │   ├── categorias.service.js
 │   │   ├── libros.service.js
@@ -176,10 +167,10 @@ LibraryHub/
 │   └── .env                        # MONGODB_URI (ignorado por git)
 │
 ├── electron/                       # Proceso principal de Electron
-│   ├── main.cjs                    # Crea la ventana y registra los 17 canales IPC
+│   ├── main.cjs                    # Crea la ventana y registra los canales IPC
 │   └── preload.cjs                 # Expone window.libraryHub al renderer
 │
-└── package.json                    # Dependencias y scripts unificados
+└── package.json                    # Dependencias y scripts
 ```
 
 ---
@@ -285,8 +276,7 @@ automáticamente.
 
 ## Autenticación y autorización
 
-No hay token JWT. La identidad del usuario vive en dos lugares
-sincronizados:
+La identidad del usuario vive en dos lugares sincronizados:
 
 - **Proceso principal de Electron (memoria):**
   `server/services/sesion.service.js` mantiene una variable
@@ -295,14 +285,28 @@ sincronizados:
   `requerirSesion()` (lanza error si no hay nadie logueado) o
   `requerirRol('bibliotecario')` (lanza error si el rol no coincide).
 - **Renderer (localStorage):** `src/context/AuthContext.jsx` guarda el
-  objeto `user` en la clave `libraryhub_user` al hacer login y lo
-  restaura al montar el provider. Esto permite que la sesión
-  **persista** entre reinicios de la app.
+  objeto `user` en la clave `libraryhub_user` al hacer login. Esto
+  permite que la sesión **persista** entre reinicios de la app.
 
 El inicio de sesión (`auth:login` IPC) valida cédula y contraseña
 contra la base de datos. Si la cuenta está activa y la contraseña
-coincide, devuelve `{ ok: true, user, token: null }`. El frontend
-ignora el `token: null` y guarda solo el `user`.
+coincide, devuelve `{ ok: true, user }`.
+
+### Restauración de sesión al abrir la app
+
+Al montar `AuthProvider`, si hay un usuario guardado en `localStorage`,
+se dispara `auth:restaurarSesion`: vuelve a buscar al miembro por su
+id, confirma que siga activo, y sincroniza `usuarioActual` en el
+proceso principal de Electron con lo que el renderer ya tenía guardado.
+
+Mientras esa sincronización está en curso, `AuthContext` expone
+`sesionLista: false`, y `RequireAuth` (en `App.jsx`) muestra un
+spinner en lugar de montar la página protegida — así ninguna página
+dispara pedidos IPC antes de que el proceso principal sepa quién está
+logueado.
+
+Si la restauración falla (la cuenta ya no existe o fue suspendida), la
+sesión se cierra localmente.
 
 ---
 
@@ -311,60 +315,19 @@ ignora el `token: null` y guarda solo el `user`.
 **`server/.env`** _(única variable de entorno del proyecto)_
 
 | Variable      | Descripción                                                       |
-| ------------- | ----------------------------------------------------------------- |
+| ------------- | ------------------------------------------------------------------ |
 | `MONGODB_URI` | Cadena de conexión a la instancia de MongoDB. Por defecto: `mongodb://localhost:27017/libraryhub`. |
-
-> Antes el proyecto también usaba `JWT_SECRET` y `PORT` (variables
-> del backend Express). Ya no se necesitan: no hay firma de tokens y
-> no hay un puerto HTTP abierto.
 
 ---
 
 ## Scripts disponibles
 
 | Comando                  | Descripción                                                                  |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `npm run dev`            | Servidor de desarrollo de Vite (sin Electron)                                |
-| `npm run build`          | Genera el build de producción del frontend en `dist/`                       |
-| `npm run preview`        | Sirve el build de producción con Vite                                        |
-| `npm run lint`           | Analiza el código con oxlint                                                 |
-| `npm run seed`           | Carga los datos de ejemplo en MongoDB (borra lo anterior)                    |
-| `npm run electron:dev`   | Levanta Vite + Electron juntos (modo desarrollo)                             |
-| `npm run electron:build` | Compila el frontend y abre Electron apuntando a `dist/`                      |
-
----
-
-## Alcance y decisiones de diseño
-
-El sistema está compuesto por dos módulos con responsabilidades
-distintas:
-
-- Un **módulo de miembros**, correspondiente a las cinco vistas
-  centrales (login, catálogo, detalle de libro, perfil y reservas).
-- Un **módulo administrativo**, exclusivo del rol de bibliotecario,
-  con funciones de gestión operativa sobre préstamos, reservas, multas
-  y el directorio de miembros.
-
-Ambos módulos comparten el mismo sistema de sesión (un solo usuario
-logueado a la vez en la app de escritorio) y la misma conexión a
-MongoDB.
-
-### Por qué Electron y no una app web
-
-LibraryHub pasó por una reversión de arquitectura en julio de 2026. La
-discusión original que llevó a descartar Electron está documentada en
-`docs/Justificacion Tecnica Electron.md` (marcada como "decisión
-anterior, revertida"). El plan completo de la migración está en
-`PLAN_MIGRACION_ELECTRON_IPC.md`, y los detalles de la arquitectura
-actual en el anexo de `docs/DOCUMENTACION TECNICA LIBRARYHUB.md`.
-
-### Regla de oro de la migración
-
-Durante la migración de Express a IPC se respetó una regla: **las
-páginas de React no deberían necesitar ningún cambio**. Todas las
-páginas le hablan exclusivamente a `apiService.js`, y `apiService.js`
-mantuvo exactamente la misma firma pública (nombres, parámetros, tipo
-de retorno) que tenía cuando hacía fetch a Express. Si en algún
-momento futuro una página necesita cambiar para usar un canal IPC,
-es señal de que `apiService.js` no mantuvo la fachada, no que la
-página esté mal.
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `npm run dev`            | Servidor de desarrollo de Vite (sin Electron)                                 |
+| `npm run build`          | Genera el build de producción del frontend en `dist/`                        |
+| `npm run preview`        | Sirve el build de producción con Vite                                         |
+| `npm run lint`           | Analiza el código con oxlint                                                  |
+| `npm run seed`           | Carga los datos de ejemplo en MongoDB (borra lo anterior)                     |
+| `npm run electron:dev`   | Levanta Vite + Electron juntos (modo desarrollo)                              |
+| `npm run electron:build` | Compila el frontend y abre Electron apuntando a `dist/`                       |

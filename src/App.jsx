@@ -12,6 +12,7 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { useAuth } from './context/AuthContext'
+import { Spinner } from './components/ui/Spinner'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login/Login'
 import Libros from './pages/Libros/Libros'
@@ -22,8 +23,25 @@ import Bibliotecario from './pages/Bibliotecario/Bibliotecario'
 
 // Guard de autenticacion. Si no hay usuario, va al login.
 // Si hay usuario pero su rol no esta en allowedRoles, va a /libros.
+//
+// Antes de decidir cualquiera de esas dos cosas, espera a que
+// sesionLista sea true. Esto evita que una pagina protegida (por
+// ejemplo Libros.jsx) se monte y dispare sus pedidos IPC mientras
+// AuthContext todavia esta reconectando la sesion del lado de Electron
+// (ver el efecto en AuthContext.jsx) — si no se esperara, esos pedidos
+// llegarian antes de que el proceso principal supiera quien esta
+// logueado, y fallarian con "No hay una sesion activa."
 function RequireAuth({ allowedRoles }) {
-  const { user } = useAuth()
+  const { user, sesionLista } = useAuth()
+
+  if (!sesionLista) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
   if (!user) return <Navigate to="/" replace />
   if (allowedRoles && !allowedRoles.includes(user.rol)) {
     return <Navigate to="/libros" replace />

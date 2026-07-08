@@ -65,6 +65,8 @@ function registrarCanalesIPC({ authService, categoriasService, librosService, pr
   // auth
   ipcMain.handle('auth:login', conManejorDeErrores((_e, cedula, password) =>
     authService.login(cedula, password)))
+  ipcMain.handle('auth:restaurarSesion', conManejorDeErrores((_e, userId) =>
+    authService.restaurarSesion(userId)))
 
   // categorias
   ipcMain.handle('categorias:listar', conManejorDeErrores(() =>

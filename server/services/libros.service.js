@@ -15,12 +15,22 @@ function escapeRegex(texto) {
 // Convierte un documento Libro de Mongo al formato que espera el frontend.
 // Hace un flatten de la categoria: en vez de devolver un objeto {id, nombre},
 // devuelve dos campos separados (categoria_id y categoria con el nombre).
+//
+// IMPORTANTE: todos los campos que arma esta funcion tienen que ser tipos
+// planos (string, number, boolean, array/objeto plano, o null). Este
+// objeto viaja de vuelta al renderer via IPC, que usa el algoritmo de
+// "structured clone" del navegador — y ese algoritmo NO puede clonar
+// instancias de MongooseArray/MongooseDocument (fallan con el error
+// "An object could not be cloned"), aunque por fuera parezcan un array
+// o un objeto comun. Por eso "autores" se vuelve a armar explicitamente
+// con Array.from(): eso garantiza un Array nativo, sin el envoltorio de
+// Mongoose por dentro.
 function formatLibro(libro) {
   return {
     id:                  libro.id,
     titulo:              libro.titulo,
     isbn:                libro.isbn ?? null,
-    autores:             libro.autores ?? [],
+    autores:             Array.isArray(libro.autores) ? Array.from(libro.autores) : [],
     editorial:           libro.editorial ?? null,
     categoria:           libro.categoria?.nombre ?? null,
     categoria_id:        libro.categoria?.id ?? null,

@@ -35,8 +35,10 @@ const libroSchema = new Schema(
 )
 
 // Indices para que las busquedas y los filtros sean rapidos.
+// isbn no necesita un index() explicito aca: unique+sparse en la
+// definicion del campo (arriba) ya crea ese indice; declararlo dos veces
+// generaba el warning de Mongoose "Duplicate schema index on {isbn:1}".
 libroSchema.index({ titulo: 'text', autores: 'text' })
-libroSchema.index({ isbn: 1 })
 libroSchema.index({ categoria: 1 })
 
 export default model('Libro', libroSchema)

@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('libraryHub', {
 
   // ── auth ───────────────────────────────────────────────
   login: (cedula, password) => ipcRenderer.invoke('auth:login', cedula, password),
+  restaurarSesion: (userId) => ipcRenderer.invoke('auth:restaurarSesion', userId),
 
   // ── categorias ─────────────────────────────────────────
   getCategorias: () => ipcRenderer.invoke('categorias:listar'),
