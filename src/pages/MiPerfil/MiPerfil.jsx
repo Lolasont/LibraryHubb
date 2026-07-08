@@ -154,27 +154,14 @@ export default function MiPerfil() {
                   <span className="text-xs text-slate-300">·</span>
                   <span className="text-xs text-slate-500">Vence el {formatDate(prestamo.fecha_devolucion_esperada)}</span>
                 </div>
-                <div className="mt-2 flex items-center gap-2 flex-wrap">
-                  <EstadoPrestamoBadge prestamo={prestamo} />
-                  <span className="text-xs text-slate-400">
-                    Renovaciones: {prestamo.renovaciones ?? 0}/{prestamo.max_renovaciones ?? 2}
-                  </span>
-                </div>
+                <div className="mt-2"><EstadoPrestamoBadge prestamo={prestamo} /></div>
               </div>
               <div className="flex-shrink-0">
-                {(() => {
-                  const limiteAlcanzado = (prestamo.renovaciones ?? 0) >= (prestamo.max_renovaciones ?? 2)
-                  return (
-                    <button onClick={() => handleRenovar(prestamo.id)}
-                      disabled={limiteAlcanzado}
-                      title={limiteAlcanzado ? 'Ya alcanzaste el maximo de renovaciones para este libro.' : undefined}
-                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <ArrowPathIcon className="w-3.5 h-3.5" />
-                      {limiteAlcanzado ? 'Sin renovaciones' : 'Renovar'}
-                    </button>
-                  )
-                })()}
+                <button onClick={() => handleRenovar(prestamo.id)}
+                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                >
+                  <ArrowPathIcon className="w-3.5 h-3.5" />Renovar
+                </button>
               </div>
             </div>
           )

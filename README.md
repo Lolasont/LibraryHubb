@@ -27,9 +27,9 @@ una base de datos.
 El proyecto está pensado para que **dos tipos de usuario** lo usen de forma
 distinta:
 
-| Rol | Puede hacer |
-|---|---|
-| **Miembro** | Buscar libros, solicitar préstamos, reservar ejemplares, renovar préstamos y revisar sus multas. |
+| Rol               | Puede hacer                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Miembro**       | Buscar libros, solicitar préstamos, reservar ejemplares, renovar préstamos y revisar sus multas.                    |
 | **Bibliotecario** | Todo lo anterior, además de registrar devoluciones, ver métricas generales y administrar el directorio de miembros. |
 
 ---
@@ -54,13 +54,13 @@ distinta:
 
 ## Vistas principales
 
-| # | Vista | Descripción |
-|---|---|---|
-| 1 | **Login** | Autenticación mediante cédula y contraseña. |
-| 2 | **Buscar libros** | Catálogo completo, con búsqueda por texto y filtro por categoría. |
-| 3 | **Detalle de libro** | Disponibilidad de ejemplares, solicitud de préstamo o reserva. |
-| 4 | **Mi perfil** | Préstamos activos, estado de vencimiento, renovaciones y multas pendientes. |
-| 5 | **Mis reservas** | Reservas activas y posición en la cola de espera. |
+| #   | Vista                | Descripción                                                                 |
+| --- | -------------------- | --------------------------------------------------------------------------- |
+| 1   | **Login**            | Autenticación mediante cédula y contraseña.                                 |
+| 2   | **Buscar libros**    | Catálogo completo, con búsqueda por texto y filtro por categoría.           |
+| 3   | **Detalle de libro** | Disponibilidad de ejemplares, solicitud de préstamo o reserva.              |
+| 4   | **Mi perfil**        | Préstamos activos, estado de vencimiento, renovaciones y multas pendientes. |
+| 5   | **Mis reservas**     | Reservas activas y posición en la cola de espera.                           |
 
 Adicionalmente, el rol de **bibliotecario** tiene acceso a un panel de
 administración con métricas y gestión operativa (ver
@@ -132,13 +132,13 @@ Ejemplo: un miembro solicita un préstamo desde la vista de detalle de libro.
 
 ## Stack tecnológico
 
-| Capa | Tecnologías |
-|---|---|
-| **Frontend** | React 19 · Vite · React Router · Tailwind CSS · Heroicons |
-| **Backend principal** | Node.js · Express · Mongoose · JSON Web Tokens · bcrypt |
-| **Backend alternativo** | Node.js · Express · json-server |
-| **Base de datos** | MongoDB (o un archivo JSON local, según el backend elegido) |
-| **Calidad de código** | oxlint |
+| Capa                    | Tecnologías                                                 |
+| ----------------------- | ----------------------------------------------------------- |
+| **Frontend**            | React 19 · Vite · React Router · Tailwind CSS · Heroicons   |
+| **Backend principal**   | Node.js · Express · Mongoose · JSON Web Tokens · bcrypt     |
+| **Backend alternativo** | Node.js · Express · json-server                             |
+| **Base de datos**       | MongoDB (o un archivo JSON local, según el backend elegido) |
+| **Calidad de código**   | oxlint                                                      |
 
 ---
 
@@ -199,7 +199,8 @@ LibraryHub/
 ```bash
 npm install
 cp example.env .env      # ajustar VITE_API_URL según el backend elegido
-npm run dev              # disponible en http://localhost:5173
+npm run electron:dev            # disponible en http://localhost:5173
+###agregar carpeta del proyecto a exclusiones de windows defender para uso exitoso de electron
 ```
 
 ### 2. Backend: elegir una opción
@@ -249,11 +250,11 @@ VITE_API_URL=http://localhost:5001/api
 
 ## Credenciales de prueba
 
-| Rol | Cédula | Contraseña |
-|---|---|---|
-| Miembro | `12345678` | `12345678` |
-| Miembro | `23456789` | `23456789` |
-| Bibliotecario | `00000001` | `admin` |
+| Rol           | Cédula     | Contraseña |
+| ------------- | ---------- | ---------- |
+| Miembro       | `12345678` | `12345678` |
+| Miembro       | `23456789` | `23456789` |
+| Bibliotecario | `00000001` | `admin`    |
 
 La pantalla de inicio de sesión incluye un panel con estas credenciales:
 un clic sobre cualquiera de ellas completa el formulario automáticamente.
@@ -306,24 +307,24 @@ de `server/seed.js` o `server-mock/db.seed.json`.
 
 **Frontend** (`.env` en la raíz del proyecto)
 
-| Variable | Descripción |
-|---|---|
+| Variable       | Descripción                                                    |
+| -------------- | -------------------------------------------------------------- |
 | `VITE_API_URL` | URL base de la API. Determina qué backend consume el frontend. |
 
 **`server/.env`**
 
-| Variable | Descripción |
-|---|---|
-| `MONGODB_URI` | Cadena de conexión a la instancia de MongoDB. |
-| `JWT_SECRET` | Clave utilizada para firmar y verificar los tokens JWT. |
-| `PORT` | Puerto en el que escucha el servidor Express (por defecto, 5000). |
+| Variable      | Descripción                                                       |
+| ------------- | ----------------------------------------------------------------- |
+| `MONGODB_URI` | Cadena de conexión a la instancia de MongoDB.                     |
+| `JWT_SECRET`  | Clave utilizada para firmar y verificar los tokens JWT.           |
+| `PORT`        | Puerto en el que escucha el servidor Express (por defecto, 5000). |
 
-**`server-mock/.env`** *(opcional; cuenta con valores por defecto)*
+**`server-mock/.env`** _(opcional; cuenta con valores por defecto)_
 
-| Variable | Descripción |
-|---|---|
+| Variable     | Descripción                                                                  |
+| ------------ | ---------------------------------------------------------------------------- |
 | `JWT_SECRET` | Debe coincidir con la de `server/` para que los tokens sean intercambiables. |
-| `PORT` | Puerto del servidor (por defecto, 5001). |
+| `PORT`       | Puerto del servidor (por defecto, 5001).                                     |
 
 ---
 
@@ -331,26 +332,26 @@ de `server/seed.js` o `server-mock/db.seed.json`.
 
 **Frontend**
 
-| Comando | Descripción |
-|---|---|
-| `npm run dev` | Servidor de desarrollo (Vite) |
-| `npm run build` | Genera el build de producción |
+| Comando           | Descripción                             |
+| ----------------- | --------------------------------------- |
+| `npm run dev`     | Servidor de desarrollo (Vite)           |
+| `npm run build`   | Genera el build de producción           |
 | `npm run preview` | Sirve el build de producción localmente |
-| `npm run lint` | Analiza el código con oxlint |
+| `npm run lint`    | Analiza el código con oxlint            |
 
 **`server/`**
 
-| Comando | Descripción |
-|---|---|
-| `npm run dev` | Servidor con recarga automática (nodemon) |
-| `npm run start` | Inicia el servidor |
-| `npm run seed` | Carga datos de ejemplo en MongoDB |
+| Comando         | Descripción                               |
+| --------------- | ----------------------------------------- |
+| `npm run dev`   | Servidor con recarga automática (nodemon) |
+| `npm run start` | Inicia el servidor                        |
+| `npm run seed`  | Carga datos de ejemplo en MongoDB         |
 
 **`server-mock/`**
 
-| Comando | Descripción |
-|---|---|
-| `npm run dev` | Inicia el servidor |
+| Comando         | Descripción                            |
+| --------------- | -------------------------------------- |
+| `npm run dev`   | Inicia el servidor                     |
 | `npm run reset` | Restaura `db.json` a su estado inicial |
 
 ---
@@ -367,3 +368,43 @@ El sistema está compuesto por dos módulos con responsabilidades distintas:
 
 Ambos módulos comparten la misma base de autenticación y el mismo backend,
 descrito en la sección [Arquitectura](#arquitectura).
+
+---
+
+## Ejecutar con Electron
+
+Este proyecto ahora incluye Electron para abrir la app React como aplicacion de escritorio.
+
+### Instalar dependencias
+
+```bash
+npm install
+```
+
+### Ejecutar en modo desarrollo
+
+```bash
+npm run electron:dev
+```
+
+Este comando levanta Vite en `http://localhost:5173` y luego abre la ventana de Electron.
+
+### Probar version compilada
+
+```bash
+npm run electron:build
+```
+
+Este comando crea la carpeta `dist` con Vite y Electron carga el archivo `dist/index.html`.
+
+### Archivos agregados para Electron
+
+- `electron/main.cjs`: proceso principal de Electron y configuracion de la ventana.
+- `electron/preload.cjs`: archivo preload seguro para futuras funciones IPC.
+
+### Cambios importantes
+
+- Se agrego `main` en `package.json` apuntando a `electron/main.cjs`.
+- Se agregaron los scripts `electron:dev` y `electron:build`.
+- Se cambio `BrowserRouter` por `HashRouter` para que las rutas funcionen al compilar y abrir la app desde Electron.
+- Se agrego `base: './'` en `vite.config.js` para que los assets carguen correctamente en escritorio.

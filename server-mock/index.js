@@ -41,11 +41,6 @@ const DB_PATH    = path.join(__dirname, 'db.json')
 
 const PORT = process.env.PORT ?? 5001
 
-// Limite de veces que se puede renovar un mismo prestamo (igual que en
-// server/routes/prestamos.routes.js, para que ambos backends se comporten
-// exactamente igual).
-const MAX_RENOVACIONES = 2
-
 // Defaults por si no se define .env (asi funciona out-of-the-box).
 process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'libraryhub_dev_secret_key'
 
@@ -82,7 +77,12 @@ function nextId(coleccion, prefijo) {
 const app = express()
 app.disable('x-powered-by')
 
-app.use(cors({ origin: 'http://localhost:5173' }))
+// CORS abierto: aceptamos peticiones desde cualquier origen (localhost, tuneles
+// de VS Code, deploys publicos, etc.). El backend no usa cookies de sesion —
+// la auth va por JWT en el header Authorization — asi que no hay riesgo de
+// CSRF por relajar el origin. Si mas adelante se anade auth por cookies,
+// habra que volver a la lista blanca.
+app.use(cors({ origin: '*' }))
 app.use(express.json())
 
 // ── Helpers de formato ─────────────────────────────────────
@@ -121,8 +121,6 @@ function formatPrestamo(p) {
     fecha_devolucion_esperada: toDate(p.fecha_devolucion_esperada),
     fecha_devolucion:          toDate(p.fecha_devolucion),
     estado:                    p.estado,
-    renovaciones:              p.renovaciones ?? 0,
-    max_renovaciones:          MAX_RENOVACIONES,
   }
 }
 
@@ -286,7 +284,6 @@ app.post('/api/prestamos', verifyToken, (req, res) => {
     fecha_devolucion_esperada: venc.toISOString(),
     fecha_devolucion:          null,
     estado:                    'activo',
-    renovaciones:              0,
   }
   db.prestamos.push(prestamo)
 
@@ -303,7 +300,6 @@ app.post('/api/prestamos', verifyToken, (req, res) => {
 })
 
 // PATCH /api/prestamos/:id/renovar — extiende el prestamo 14 dias mas.
-// Maximo MAX_RENOVACIONES veces por prestamo.
 app.patch('/api/prestamos/:id/renovar', verifyToken, (req, res) => {
   const prestamo = db.prestamos.find(p => p.id === req.params.id)
   if (!prestamo) {
@@ -319,25 +315,14 @@ app.patch('/api/prestamos/:id/renovar', verifyToken, (req, res) => {
     return res.status(400).json({ ok: false, mensaje: 'No se puede renovar un prestamo ya devuelto.' })
   }
 
-  if ((prestamo.renovaciones ?? 0) >= MAX_RENOVACIONES) {
-    return res.status(400).json({
-      ok:      false,
-      mensaje: `No puedes tener mas de ${MAX_RENOVACIONES} renovaciones de este libro. Debes devolverlo.`,
-    })
-  }
-
   const base = new Date(prestamo.fecha_devolucion_esperada)
   base.setDate(base.getDate() + 14)
   prestamo.fecha_devolucion_esperada = base.toISOString()
-  prestamo.estado       = 'activo'
-  prestamo.renovaciones = (prestamo.renovaciones ?? 0) + 1
+  prestamo.estado = 'activo'
 
   writeDb()
 
-  return res.json({
-    ok:      true,
-    mensaje: `Prestamo renovado por 14 dias mas (${prestamo.renovaciones}/${MAX_RENOVACIONES}).`,
-  })
+  return res.json({ ok: true, mensaje: 'Prestamo renovado por 14 dias mas.' })
 })
 
 // PATCH /api/prestamos/:id/devolver — registra la devolucion y genera multa
@@ -418,7 +403,7 @@ app.post('/api/reservas', verifyToken, (req, res) => {
   }
 
   // No se puede reservar dos veces el mismo libro.
-  const yaReservado = db.reservas.find(
+  const yaReservado = db.reservas.some(
     r => r.miembro_id === req.user.id && r.libro_id === libro_id && r.estado === 'reservado'
   )
   if (yaReservado) {
