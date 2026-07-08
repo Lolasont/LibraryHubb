@@ -2,17 +2,6 @@
 // Puede ser un socio (rol "miembro") o un bibliotecario (rol "bibliotecario").
 // Las contrasenas se guardan hasheadas, nunca en texto plano.
 
-// ──────────────────────────────────────────────────────────────────
-// AMPLIACION DEL ALCANCE ORIGINAL
-// El enunciado del caso pedia unicamente el frontend de una biblioteca
-// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
-// Mi Perfil y Mis Reservas), usando una API publica de conversion de
-// moneda para las multas. Este backend completo no formaba parte de
-// ese enunciado. Se conserva porque esta completamente integrado al
-// sistema y el equipo decidio mantenerlo como valor anadido del
-// proyecto, no porque haya sido requerido originalmente.
-// ──────────────────────────────────────────────────────────────────
-
 import { Schema, model } from 'mongoose'
 import bcrypt from 'bcryptjs'
 

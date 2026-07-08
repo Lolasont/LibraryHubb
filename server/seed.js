@@ -5,17 +5,6 @@
 // Como correrlo:   npm run seed
 // Importante:     borra y recrea todas las colecciones cada vez que se ejecuta.
 
-// ──────────────────────────────────────────────────────────────────
-// AMPLIACION DEL ALCANCE ORIGINAL
-// El enunciado del caso pedia unicamente el frontend de una biblioteca
-// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
-// Mi Perfil y Mis Reservas), usando una API publica de conversion de
-// moneda para las multas. Este backend completo no formaba parte de
-// ese enunciado. Se conserva porque esta completamente integrado al
-// sistema y el equipo decidio mantenerlo como valor anadido del
-// proyecto, no porque haya sido requerido originalmente.
-// ──────────────────────────────────────────────────────────────────
-
 import 'dotenv/config'
 import mongoose from 'mongoose'
 import { conectarDB } from './config/db.js'
@@ -115,8 +104,7 @@ async function seed() {
 
   console.log('\nSeed completado exitosamente.')
   console.log('Credenciales de acceso:')
-  console.log('  Miembro basico   -> cedula: 12345678 / pass: 12345678')
-  console.log('  Miembro premium  -> cedula: 23456789 / pass: 23456789')
+  console.log('  Miembro          -> cedula: 12345678 / pass: 12345678')
   console.log('  Bibliotecario    -> cedula: 00000001 / pass: admin')
   console.log('')
 

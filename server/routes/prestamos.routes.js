@@ -2,16 +2,6 @@
 // Endpoints para que los socios pidan, renueven y devuelvan libros.
 // El bibliotecario registra devoluciones y multas automaticas.
 
-// ──────────────────────────────────────────────────────────────────
-// AMPLIACION DEL ALCANCE ORIGINAL
-// El enunciado del caso pedia unicamente el frontend de una biblioteca
-// digital municipal (5 vistas: Login, Buscar Libros, Detalle de Libro,
-// Mi Perfil y Mis Reservas), usando una API publica de conversion de
-// moneda para las multas. Este backend completo no formaba parte de
-// ese enunciado. Se conserva porque esta completamente integrado al
-// sistema y el equipo decidio mantenerlo como valor anadido del
-// proyecto, no porque haya sido requerido originalmente.
-// ──────────────────────────────────────────────────────────────────
 
 import { Router } from 'express'
 import Prestamo from '../models/Prestamo.js'
@@ -21,6 +11,11 @@ import { verifyToken, requireRole } from '../middleware/auth.js'
 import { toDate } from '../utils/format.js'
 
 const router = Router()
+
+// Limite de veces que se puede renovar un mismo prestamo. Al llegar a este
+// numero, el boton "Renovar" del frontend se desactiva y el backend rechaza
+// la peticion aunque igual llegue (defensa en profundidad).
+const MAX_RENOVACIONES = 2
 
 // Da formato a un prestamo para enviar al frontend.
 // Los ObjectId de Mongoose se transforman en strings para que sean
@@ -36,6 +31,8 @@ function formatPrestamo(p) {
     fecha_devolucion_esperada: toDate(p.fecha_devolucion_esperada),
     fecha_devolucion:          toDate(p.fecha_devolucion),
     estado:                    p.estado,
+    renovaciones:              p.renovaciones ?? 0,
+    max_renovaciones:          MAX_RENOVACIONES,
   }
 }
 
@@ -98,6 +95,7 @@ router.post('/', verifyToken, async (req, res) => {
       fecha_prestamo:            new Date(),
       fecha_devolucion_esperada: fechaVenc,
       estado:                    'activo',
+      renovaciones:              0,
     })
 
     // Le descontamos una copia disponible al libro.
@@ -119,7 +117,8 @@ router.post('/', verifyToken, async (req, res) => {
 
 // PATCH /api/prestamos/:id/renovar
 // Renueva un prestamo por 14 dias mas. El socio dueno del prestamo
-// o un bibliotecario pueden hacerlo.
+// o un bibliotecario pueden hacerlo. Maximo MAX_RENOVACIONES veces
+// por prestamo; despues de eso hay que devolver el libro.
 router.patch('/:id/renovar', verifyToken, async (req, res) => {
   try {
     const prestamo = await Prestamo.findById(req.params.id)
@@ -137,14 +136,25 @@ router.patch('/:id/renovar', verifyToken, async (req, res) => {
       return res.status(400).json({ ok: false, mensaje: 'No se puede renovar un prestamo ya devuelto.' })
     }
 
+    if ((prestamo.renovaciones ?? 0) >= MAX_RENOVACIONES) {
+      return res.status(400).json({
+        ok:      false,
+        mensaje: `No puedes tener mas de ${MAX_RENOVACIONES} renovaciones de este libro. Debes devolverlo.`,
+      })
+    }
+
     // Sumamos 14 dias a la fecha actual de devolucion esperada.
     const base = new Date(prestamo.fecha_devolucion_esperada)
     base.setDate(base.getDate() + 14)
     prestamo.fecha_devolucion_esperada = base
-    prestamo.estado = 'activo'
+    prestamo.estado       = 'activo'
+    prestamo.renovaciones = (prestamo.renovaciones ?? 0) + 1
     await prestamo.save()
 
-    return res.json({ ok: true, mensaje: 'Prestamo renovado por 14 dias mas.' })
+    return res.json({
+      ok:      true,
+      mensaje: `Prestamo renovado por 14 dias mas (${prestamo.renovaciones}/${MAX_RENOVACIONES}).`,
+    })
   } catch (err) {
     console.error('Error renovando prestamo:', err)
     return res.status(500).json({ ok: false, mensaje: 'Error al renovar el prestamo.' })
