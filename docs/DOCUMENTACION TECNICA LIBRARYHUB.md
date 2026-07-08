@@ -1,5 +1,26 @@
 # Documentación Técnica — LibraryHub
 
+> **⚠️ Documento histórico (julio 2026).** Las secciones 1 a 4 de este
+> archivo describen la **arquitectura anterior** de LibraryHub, basada en
+> un backend Express que escuchaba en un puerto HTTP, con autenticación
+> por JWT y dos backends intercambiables (`server/` y `server-mock/`) que
+> el frontend elegía con la variable de entorno `VITE_API_URL`.
+>
+> Esa arquitectura fue reemplazada. El proyecto ahora corre como una
+> **aplicación de escritorio con Electron**: el proceso principal de
+> Electron se conecta a MongoDB directamente, expone la lógica de
+> negocio a través de **canales IPC**, y el frontend React se comunica
+> con él mediante `window.libraryHub` (expuesto por el preload). No hay
+> servidor HTTP, no hay JWT, no hay `server-mock/`.
+>
+> El detalle de la arquitectura actual está en el **Anexo al final de
+> este documento** y en el archivo `PLAN_MIGRACION_ELECTRON_IPC.md`. El
+> `README.md` también fue actualizado para reflejar el nuevo flujo de
+> instalación y ejecución. Este archivo se conserva porque describe el
+> razonamiento de las secciones internas (modelos, lógica de negocio,
+> recorrido de cada acción) que en su mayoría siguen siendo válidas
+> —solo cambió **cómo** el frontend invoca esa lógica, no **qué** hace.
+
 ## Introducción
 
 Este documento reúne, en un solo lugar, la documentación completa del
@@ -799,3 +820,141 @@ cuatro secciones permiten entender —sin necesidad de abrir el código— cómo
 el frontend, el backend y la base de datos trabajan juntos para que cada
 clic del usuario termine convertido en un dato guardado y una pantalla
 actualizada.
+
+---
+
+## Anexo — Arquitectura actual (julio 2026): Electron + IPC + services
+
+### Por qué cambió
+
+LibraryHub dejó de ser una aplicación web servida por Express para
+convertirse en una aplicación de escritorio. La razón principal: ya no
+hacía falta exponer un servidor HTTP ni mantener dos backends
+intercambiables. Todo el ciclo de vida del proceso (cargar la UI,
+hablar con MongoDB, identificar al usuario) ocurre dentro de un único
+proceso de Electron, sin red de por medio.
+
+### Diagrama de la nueva arquitectura
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Renderer (React)                                            │
+│  src/pages/*.jsx → src/data/apiService.js → window.libraryHub│
+└────────────────────┬─────────────────────────────────────────┘
+                     │ ipcRenderer.invoke('canal', args)
+                     ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Preload (electron/preload.cjs)                              │
+│  contextBridge.exposeInMainWorld('libraryHub', { ... })      │
+└────────────────────┬─────────────────────────────────────────┘
+                     │ IPC (mismo proceso)
+                     ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Proceso principal (electron/main.cjs)                       │
+│  ipcMain.handle('canal', handler)                            │
+│  └─ services/*.js (Mongoose)                                 │
+│  └─ sesion.service.js (usuarioActual en memoria)             │
+└────────────────────┬─────────────────────────────────────────┘
+                     │ Mongoose
+                     ▼
+                  MongoDB (mongodb://localhost:27017/libraryhub)
+```
+
+### Qué hay ahora en `server/`
+
+La carpeta `server/` sigue existiendo pero **ya no es un servidor HTTP**.
+Es simplemente el conjunto de archivos que el proceso principal de
+Electron carga con `import()` dinámico:
+
+- `server/config/db.js` — `conectarDB()`. Se llama una vez en
+  `app.whenReady()` antes de registrar los canales IPC.
+- `server/models/` — esquemas de Mongoose (Libro, Miembro, Prestamo,
+  Reserva, Multa, Categoria). Sin cambios.
+- `server/services/` — **reemplaza a `server/routes/` + `server/middleware/`**.
+  Un archivo por recurso, con funciones que reciben sus argumentos
+  explícitamente (sin `req`/`res`). Devuelven directamente
+  `{ ok, mensaje, ...datos }` en vez de responder con códigos HTTP.
+- `server/services/sesion.service.js` — **reemplaza a
+  `server/middleware/auth.js`**. Mantiene en memoria quién está logueado
+  (`usuarioActual`). `requerirSesion()` lanza un error si no hay nadie;
+  `requerirRol('bibliotecario')` lo lanza si el rol no coincide.
+- `server/utils/format.js` — `toDate()`. Sin cambios.
+- `server/seed.js` — carga datos de ejemplo. Sin cambios.
+
+### Cómo viaja una acción hoy (ejemplo: solicitar un préstamo)
+
+1. El usuario hace clic en "Solicitar préstamo" en `LibroDetalle.jsx`.
+2. El componente llama a `solicitarPrestamo(libroId)` exportado por
+   `src/data/apiService.js`.
+3. `apiService.js` ejecuta `window.libraryHub.solicitarPrestamo(libroId)`.
+4. `preload.cjs` lo traduce a `ipcRenderer.invoke('prestamos:solicitar', libroId)`.
+5. En `main.cjs`, el handler registrado para `'prestamos:solicitar'`
+   resuelve el usuario actual con `getUsuarioActual()` y llama a
+   `prestamosService.solicitarPrestamo(libroId, usuarioActual)`.
+6. El service valida que haya sesión, busca el libro, descuenta una
+   copia, crea el préstamo y devuelve `{ ok: true, mensaje, prestamo }`.
+7. `main.cjs` recibe ese objeto (o un error) y, si fue un error, lo
+   convierte con `conManejorDeErrores` en `{ ok: false, mensaje }`.
+8. `apiService.js` recibe la respuesta y se la devuelve al componente,
+   que muestra el toast correspondiente.
+
+### Manejo de errores
+
+El wrapper `conManejorDeErrores` en `main.cjs` envuelve cada handler de
+IPC. Si el service lanza cualquier excepción (por ejemplo, un corte de
+sesión de `requerirSesion()`, una falta de rol de `requerirRol()`, o
+una excepción de Mongoose), el wrapper la captura y devuelve
+`{ ok: false, mensaje: error.message }`. Esto significa que el frontend
+nunca tiene que envolver llamadas IPC en `try/catch` para que la app no
+se caiga — el handler siempre devuelve algo.
+
+### Sesión
+
+La sesión vive en dos lugares sincronizados:
+
+- **Electron (memoria)**: `sesion.service.js` mantiene `usuarioActual`.
+  Se setea en `auth.service.js` al validar el login.
+- **Renderer (localStorage)**: `AuthContext.jsx` guarda `user` en la
+  clave `libraryhub_user` al hacer login, y la restaura al montar el
+  provider.
+
+Si la app se reinicia, el `usuarioActual` de Electron empieza en `null`,
+pero el `localStorage` del renderer puede tener un usuario guardado.
+La regla práctica es: **la sesión se considera activa si el renderer
+tiene un `user` en `localStorage`**. Si en el futuro se observa un
+desfase entre ambos lados, se puede agregar un canal
+`auth:restaurarSesion` para que el `AuthContext` lo invoque al montar y
+sincronice el `usuarioActual` de Electron con el `user` del
+`localStorage`. En la práctica esto no fue necesario durante el
+desarrollo.
+
+### Qué cambió en el frontend
+
+- `src/data/apiService.js` — reescrito por dentro. Las 17 funciones
+  exportadas mantienen la misma firma; cada una ahora delega en
+  `window.libraryHub.algo(...)`.
+- `src/context/AuthContext.jsx` — sin manejo de token. Sigue
+  guardando el `user` en `localStorage`.
+- `Login.jsx`, `Libros.jsx`, `LibroDetalle.jsx`, `MiPerfil.jsx`,
+  `MisReservas.jsx`, `Bibliotecario.jsx`, `App.jsx`, `Layout.jsx` —
+  **sin cambios**. La fachada pública de `apiService.js` se
+  preservó 1:1, así que ninguna página necesitó tocarse.
+- `src/data/utils.js` — sin cambios (funciones puras, no hacen IPC).
+
+### Qué se eliminó
+
+- `server/routes/` (completo) → reemplazado por `server/services/`.
+- `server/middleware/auth.js` → reemplazado por
+  `server/services/sesion.service.js`.
+- `server/index.js`, `server/package.json`, `server/package-lock.json`,
+  `server/.env.example`, `server/app.js` (si existió) → ya no hay
+  proceso Express que arrancar.
+- `server-mock/` (completo) → ya no hay contrato HTTP que igualar.
+- Dependencias `express`, `cors`, `jsonwebtoken` del proyecto
+  (ahora consolidadas en el `package.json` raíz, junto con `mongoose`,
+  `bcryptjs` y `dotenv` que siguen siendo necesarias).
+- `example.env` de la raíz (solo contenía `VITE_API_URL`, que ya no
+  existe).
+- El archivo `docs/Justificacion Tecnica Electron.md` se conserva
+  marcado como "decisión anterior revertida", para preservar el
+  histórico de la discusión.

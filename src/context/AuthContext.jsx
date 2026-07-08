@@ -1,18 +1,20 @@
 // Contexto de autenticacion.
-// Mantiene en memoria los datos del usuario logueado y el token JWT
-// que se envia en cada peticion a la API.
+// Mantiene en memoria los datos del usuario logueado. Antes ademas
+// guardaba un token JWT, pero con la migracion a IPC ese token ya no
+// existe: la identidad del usuario vive en memoria del proceso
+// principal de Electron (server/services/sesion.service.js).
 //
-// Los datos se persisten en localStorage para que la sesion sobreviva
-// a recargas del navegador. El token vive en una clave aparte para
-// que apiService.js lo pueda leer sin necesidad de importar este contexto.
+// El objeto user se persiste en localStorage para que la sesion
+// sobreviva a recargas del navegador y a reinicios de la app
+// (decision 2.2 del plan: "si persiste").
 
 // ──────────────────────────────────────────────────────────────────
 // AMPLIACION DEL ALCANCE ORIGINAL
 // El enunciado del caso no exigia autenticacion real ni manejo de roles;
-// bastaba con un frontend de consulta. El sistema de login con JWT y
-// roles (socio / bibliotecario) se agrego como ampliacion del alcance.
+// bastaba con un frontend de consulta. El sistema de login y roles
+// (socio / bibliotecario) se agrego como ampliacion del alcance.
 // Se conserva porque esta completamente integrado al resto del sistema
-// (backend, rutas protegidas, panel del bibliotecario).
+// (services, paginas protegidas, panel del bibliotecario).
 // ──────────────────────────────────────────────────────────────────
 
 import { createContext, useContext, useMemo, useState, useCallback } from 'react'
@@ -31,19 +33,18 @@ export function AuthProvider({ children }) {
     }
   })
 
-  // login guarda el usuario y el token. Lo llama el componente Login
-  // despues de que el backend responde con { user, token }.
-  const login = useCallback((userData, token) => {
+  // login guarda el usuario. El segundo argumento (token) se mantiene por
+  // compatibilidad con la firma que usaba Login.jsx, pero ya no se persiste:
+  // en IPC no hace falta un token, la sesion vive en memoria del lado de Electron.
+  const login = useCallback((userData, _token) => {
     setUser(userData)
     localStorage.setItem('libraryhub_user', JSON.stringify(userData))
-    localStorage.setItem('libraryhub_token', token)
   }, [])
 
   // logout limpia el estado y localStorage.
   const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem('libraryhub_user')
-    localStorage.removeItem('libraryhub_token')
   }, [])
 
   const value = useMemo(() => ({ user, login, logout }), [user, login, logout])

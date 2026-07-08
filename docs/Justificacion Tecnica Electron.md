@@ -1,5 +1,22 @@
 # Por qué LibraryHub no usa Electron
 
+> **⚠️ Decisión anterior, revertida en julio 2026.** Este documento
+> describe la posición que el equipo mantuvo durante el desarrollo
+> inicial del proyecto: **no usar Electron** y mantener la
+> arquitectura cliente-servidor con Express. Esa decisión fue revertida
+> en julio de 2026. LibraryHub ahora **sí usa Electron** como aplicación
+> de escritorio, comunicándose con MongoDB a través de IPC.
+>
+> El plan completo de la migración está en
+> `PLAN_MIGRACION_ELECTRON_IPC.md`. La arquitectura actual está
+> documentada en el `README.md` y en el anexo al final de
+> `docs/DOCUMENTACION TECNICA LIBRARYHUB.md`.
+>
+> Este archivo se conserva íntegro como registro histórico del
+> razonamiento que llevó a la decisión original y, sobre todo, de las
+> objeciones que se consideraron en su momento. La sección final
+> "Conclusión" debe leerse a la luz de la reversión.
+
 ## Introducción
 
 Durante el desarrollo de LibraryHub se nos planteó la pregunta de por qué

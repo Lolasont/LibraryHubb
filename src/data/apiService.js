@@ -1,171 +1,127 @@
-// Capa de servicios que habla con el backend real (server/ o server-mock/).
-// Es la unica capa que hace fetch: las paginas siempre importan desde aca,
-// nunca llaman a fetch directamente.
+// Capa de servicios que habla con el proceso principal de Electron
+// mediante window.libraryHub (expuesto en electron/preload.cjs).
 //
-// La URL de la API se toma de la variable VITE_API_URL del archivo .env
-// de la raiz. Si no esta, usa el mismo valor por defecto que teniamos.
+// Antes este archivo hacia fetch a un backend HTTP. Ahora todas las
+// llamadas son ipcRenderer.invoke(...) ejecutadas dentro del mismo
+// proceso, asi que no hay red, no hay token, no hay URLs.
+//
+// La fachada publica (nombres de funciones exportadas, parametros y
+// tipo de retorno) se mantiene IDENTICA a la version anterior, para
+// que las paginas de React (Login, Libros, LibroDetalle, MiPerfil,
+// MisReservas, Bibliotecario) no necesiten cambios.
 
-// Normalizamos la URL base para que no importe si el .env la pone con o sin
-// /api al final, o con un slash extra al final. Sin esto, al cambiar de
-// backend (tunel, deploy, localhost) es facil terminar con rutas tipo
-// `https://host//auth/login` por una barra de mas o de menos.
-const rawBase = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '')
-const API_URL = `${rawBase}/api`
-
-// Lee el JWT que AuthContext guardo en el localStorage al iniciar sesion.
-function getToken() {
-  return localStorage.getItem('libraryhub_token') ?? null
-}
-
-// Helper que centraliza la logica de hacer fetch a la API.
-// Agrega el token automaticamente y lanza un error si la respuesta no es OK.
-async function request(path, { method = 'GET', body } = {}) {
-  const token = getToken()
-  const res = await fetch(`${API_URL}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  })
-
-  const data = await res.json()
-
-  if (!res.ok) {
-    // Usamos el mensaje del backend si existe, sino el status code generico.
-    throw new Error(data.mensaje ?? `Error ${res.status}`)
+// Acceso a la API expuesta por el preload. window.libraryHub existe
+// siempre dentro de Electron; si por algun motivo no esta (por ejemplo,
+// si se abre la app en un navegador sin preload) lanzamos un error claro
+// al usarlo, en vez de fallar silenciosamente.
+function api() {
+  if (typeof window === 'undefined' || !window.libraryHub) {
+    throw new Error(
+      'window.libraryHub no esta disponible. Esta pagina debe correr dentro de Electron.'
+    )
   }
-
-  return data
+  return window.libraryHub
 }
 
 // ─── AUTH ────────────────────────────────────────────────────
 
 /**
  * Autentica un usuario contra el backend.
- * @returns {{ user, token } | null}
+ * Devuelve { user, token } si las credenciales son validas, o null en
+ * caso contrario (mismo contrato que antes, para no tocar Login.jsx).
+ * @returns {Promise<{ user, token } | null>}
  */
 export async function loginUsuario(cedula, password) {
-  try {
-    return await request('/auth/login', { method: 'POST', body: { cedula, password } })
-  } catch {
-    return null
-  }
+  const data = await api().login(cedula, password)
+  if (!data || data.ok === false) return null
+  return { user: data.user, token: null }
 }
 
 // ─── CATEGORIAS ──────────────────────────────────────────────
 
 export async function getCategorias() {
-  return request('/categorias')
+  return api().getCategorias()
 }
 
 // ─── LIBROS ──────────────────────────────────────────────────
 
 export async function getLibros({ busqueda = '', categoria_id = null } = {}) {
-  const params = new URLSearchParams()
-  if (busqueda)     params.set('busqueda',     busqueda)
-  if (categoria_id) params.set('categoria_id', categoria_id)
-  return request(`/libros?${params}`)
+  return api().getLibros({ busqueda, categoria_id })
 }
 
 export async function getLibroById(id) {
-  try {
-    return await request(`/libros/${id}`)
-  } catch {
-    return null
-  }
+  const data = await api().getLibroById(id)
+  // Mismo contrato que antes: si no se encontro el libro, devuelve null.
+  if (data && data.ok === false) return null
+  return data
 }
 
 // ─── PRESTAMOS ───────────────────────────────────────────────
 
 export async function getPrestamosActivos() {
-  return request('/prestamos/me')
+  return api().getPrestamosActivos()
 }
 
 export async function getTodosPrestamos() {
-  return request('/prestamos')
+  return api().getTodosPrestamos()
 }
 
 /**
  * Solicita un prestamo para el usuario autenticado.
- * El backend obtiene al miembro directamente del JWT, por eso la funcion
- * solo necesita el id del libro.
  * @param {string} libro_id
  */
 export async function solicitarPrestamo(libro_id) {
-  try {
-    return await request('/prestamos', { method: 'POST', body: { libro_id } })
-  } catch (err) {
-    return { ok: false, mensaje: err.message }
-  }
+  return api().solicitarPrestamo(libro_id)
 }
 
 export async function renovarPrestamo(prestamo_id) {
-  try {
-    return await request(`/prestamos/${prestamo_id}/renovar`, { method: 'PATCH' })
-  } catch (err) {
-    return { ok: false, mensaje: err.message }
-  }
+  return api().renovarPrestamo(prestamo_id)
 }
 
 export async function registrarDevolucion(prestamo_id) {
-  try {
-    return await request(`/prestamos/${prestamo_id}/devolver`, { method: 'PATCH' })
-  } catch (err) {
-    return { ok: false, mensaje: err.message }
-  }
+  return api().registrarDevolucion(prestamo_id)
 }
 
 // ─── RESERVAS ────────────────────────────────────────────────
 
 export async function getReservasByMiembro() {
-  return request('/reservas/me')
+  return api().getReservasByMiembro()
 }
 
 export async function getReservasByLibro(libro_id) {
-  return request(`/reservas/libro/${libro_id}`)
+  return api().getReservasByLibro(libro_id)
 }
 
 export async function getTodasReservas() {
-  return request('/reservas')
+  return api().getTodasReservas()
 }
 
 /**
  * Crea una reserva para el usuario autenticado.
- * El backend obtiene al miembro directamente del JWT.
  * @param {string} libro_id
  */
 export async function hacerReserva(libro_id) {
-  try {
-    return await request('/reservas', { method: 'POST', body: { libro_id } })
-  } catch (err) {
-    return { ok: false, mensaje: err.message }
-  }
+  return api().hacerReserva(libro_id)
 }
 
 export async function cancelarReserva(reserva_id) {
-  try {
-    return await request(`/reservas/${reserva_id}`, { method: 'DELETE' })
-  } catch (err) {
-    return { ok: false, mensaje: err.message }
-  }
+  return api().cancelarReserva(reserva_id)
 }
 
 // ─── MULTAS ──────────────────────────────────────────────────
 
 export async function getMultasByMiembro() {
-  return request('/multas/me')
+  return api().getMultasByMiembro()
 }
 
 export async function getTodasMultas() {
-  return request('/multas')
+  return api().getTodasMultas()
 }
 
 // ─── MIEMBROS (para el bibliotecario) ────────────────────────
 
 export async function getMiembros() {
-  return request('/miembros')
+  return api().getMiembros()
 }
 
 // ─── UTILIDADES (sin cambios — no dependen del backend) ───────
