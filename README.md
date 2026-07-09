@@ -464,4 +464,4 @@ automáticamente en modo web.
 
 Para una explicación más detallada de cómo se conecta cada parte del
 proyecto (frontend, backend, Electron, sesión, conversión de moneda,
-etc.), ver [`COMO_FUNCIONA_LIBRARYHUB.md`](./COMO_FUNCIONA_LIBRARYHUB.md).
+etc.), ver [`docs/COMO_FUNCIONA_LIBRARYHUB.md`](./docs/COMO_FUNCIONA_LIBRARYHUB.md).
