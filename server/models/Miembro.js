@@ -31,7 +31,7 @@ const miembroSchema = new Schema(
     // decision del equipo: no formaba parte del enunciado original y solo
     // agregaba complejidad. El campo se conserva como null para no romper
     // las respuestas de la API que aun lo incluyen.
-    tipo_membresia: { type: String, default: null },
+    tipo_membresia: { type: String, enum:['regular','premium'],default:'regular',required:true },
     // Estado de la cuenta. Si esta "suspendido" o "cancelado" no puede entrar.
     estado:         { type: String, enum: ['activo', 'suspendido', 'cancelado'],  default: 'activo' },
     // Determina si el usuario ve el panel de socio o el panel de bibliotecario.

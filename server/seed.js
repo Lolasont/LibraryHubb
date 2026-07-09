@@ -48,12 +48,12 @@ async function seed() {
   //    automaticamente antes de guardarlas, asi que aca las escribimos en claro.
   console.log('Insertando miembros...')
   const miembros = await Promise.all([
-    Miembro.create({ cedula: '12345678', password: '12345678', nombre: 'Juan Perez',     email: 'juan@example.com',   telefono: '+56 9 1234 5678', direccion: 'Av. Principal 123, Santiago',       tipo_membresia: null,            rol: 'miembro',       fecha_registro: '2023-01-15' }),
-    Miembro.create({ cedula: '23456789', password: '23456789', nombre: 'Maria Garcia',   email: 'maria@example.com',  telefono: '+56 9 9876 5432', direccion: 'Calle Los Alamos 456, Providencia', tipo_membresia: null,           rol: 'miembro',       fecha_registro: '2022-08-20' }),
-    Miembro.create({ cedula: '34567890', password: '34567890', nombre: 'Carlos Lopez',   email: 'carlos@example.com', telefono: '+56 9 5555 1234', direccion: 'Pasaje Sur 789, Las Condes',        tipo_membresia: null,        rol: 'miembro',       fecha_registro: '2024-03-10' }),
-    Miembro.create({ cedula: '45678901', password: '45678901', nombre: 'Ana Rodriguez',  email: 'ana@example.com',    telefono: '+56 9 7777 8888', direccion: 'Blvd. Norte 321, Nunoa',            tipo_membresia: null,            rol: 'miembro',       fecha_registro: '2023-11-05' }),
-    Miembro.create({ cedula: '56789012', password: '56789012', nombre: 'Luis Martinez',  email: 'luis@example.com',   telefono: '+56 9 3333 4444', direccion: 'Villa del Sol 654, Maipu',          tipo_membresia: null,           rol: 'miembro',       fecha_registro: '2021-06-30' }),
-    Miembro.create({ cedula: '00000001', password: 'admin',    nombre: 'Carmen Silva',   email: 'bibliotecario@libraryhub.cl', telefono: '+56 2 2345 6789',                       tipo_membresia: null,         rol: 'bibliotecario', fecha_registro: '2021-01-01' }),
+    Miembro.create({ cedula: '12345678', password: '12345678', nombre: 'Juan Perez',     email: 'juan@example.com',   telefono: '+56 9 1234 5678', direccion: 'Av. Principal 123, Santiago',       tipo_membresia: 'regular',            rol: 'miembro',       fecha_registro: '2023-01-15' }),
+    Miembro.create({ cedula: '23456789', password: '23456789', nombre: 'Maria Garcia',   email: 'maria@example.com',  telefono: '+56 9 9876 5432', direccion: 'Calle Los Alamos 456, Providencia', tipo_membresia: 'premium',           rol: 'miembro',       fecha_registro: '2022-08-20' }),
+    Miembro.create({ cedula: '34567890', password: '34567890', nombre: 'Carlos Lopez',   email: 'carlos@example.com', telefono: '+56 9 5555 1234', direccion: 'Pasaje Sur 789, Las Condes',        tipo_membresia: 'regular',        rol: 'miembro',       fecha_registro: '2024-03-10' }),
+    Miembro.create({ cedula: '45678901', password: '45678901', nombre: 'Ana Rodriguez',  email: 'ana@example.com',    telefono: '+56 9 7777 8888', direccion: 'Blvd. Norte 321, Nunoa',            tipo_membresia: 'premium',            rol: 'miembro',       fecha_registro: '2023-11-05' }),
+    Miembro.create({ cedula: '56789012', password: '56789012', nombre: 'Luis Martinez',  email: 'luis@example.com',   telefono: '+56 9 3333 4444', direccion: 'Villa del Sol 654, Maipu',          tipo_membresia: 'regular',           rol: 'miembro',       fecha_registro: '2021-06-30' }),
+    Miembro.create({ cedula: '00000001', password: 'admin',    nombre: 'Carmen Silva',   email: 'bibliotecario@libraryhub.cl', telefono: '+56 2 2345 6789', direccion: 'Biblioteca Central, Santiago', tipo_membresia: 'premium',         rol: 'bibliotecario', fecha_registro: '2021-01-01' }),
   ])
   const [juan, maria, carlos,luis] = miembros
 
