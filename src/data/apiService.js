@@ -78,7 +78,7 @@ export async function getLibros({ busqueda = '', categoria_id = null } = {}) {
 export async function getLibroById(id) {
   const data = await api().getLibroById(id)
   // Mismo contrato que antes: si no se encontro el libro, devuelve null.
-  if (data && data.ok === false) return null
+  if (data?.ok === false) return null
   return data
 }
 
