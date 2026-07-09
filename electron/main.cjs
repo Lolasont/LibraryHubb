@@ -59,9 +59,8 @@ function conManejorDeErrores(fn) {
 
 // Registra los 17 canales IPC. Se llama una sola vez, despues de
 // conectar a MongoDB, dentro de app.whenReady().
-function registrarCanalesIPC({ authService, categoriasService, librosService, prestamosService, reservasService, multasService, miembrosService, sesionService }) {
-  const { getUsuarioActual } = sesionService
-
+// Los services leen al usuario logueado internamente via requerirSesion()
+function registrarCanalesIPC({ authService, categoriasService, librosService, prestamosService, reservasService, multasService, miembrosService }) {
   // auth
   ipcMain.handle('auth:login', conManejorDeErrores((_e, cedula, password) =>
     authService.login(cedula, password)))
@@ -80,37 +79,37 @@ function registrarCanalesIPC({ authService, categoriasService, librosService, pr
 
   // prestamos
   ipcMain.handle('prestamos:misActivos', conManejorDeErrores(() =>
-    prestamosService.getPrestamosActivos(getUsuarioActual())))
+    prestamosService.getPrestamosActivos()))
   ipcMain.handle('prestamos:listarTodos', conManejorDeErrores(() =>
-    prestamosService.getTodosPrestamos(getUsuarioActual())))
+    prestamosService.getTodosPrestamos()))
   ipcMain.handle('prestamos:solicitar', conManejorDeErrores((_e, libroId) =>
-    prestamosService.solicitarPrestamo(libroId, getUsuarioActual())))
+    prestamosService.solicitarPrestamo(libroId)))
   ipcMain.handle('prestamos:renovar', conManejorDeErrores((_e, prestamoId) =>
-    prestamosService.renovarPrestamo(prestamoId, getUsuarioActual())))
+    prestamosService.renovarPrestamo(prestamoId)))
   ipcMain.handle('prestamos:devolver', conManejorDeErrores((_e, prestamoId) =>
-    prestamosService.registrarDevolucion(prestamoId, getUsuarioActual())))
+    prestamosService.registrarDevolucion(prestamoId)))
 
   // reservas
   ipcMain.handle('reservas:misReservas', conManejorDeErrores(() =>
-    reservasService.getReservasByMiembro(getUsuarioActual())))
+    reservasService.getReservasByMiembro()))
   ipcMain.handle('reservas:porLibro', conManejorDeErrores((_e, libroId) =>
-    reservasService.getReservasByLibro(libroId, getUsuarioActual())))
+    reservasService.getReservasByLibro(libroId)))
   ipcMain.handle('reservas:listarTodas', conManejorDeErrores(() =>
-    reservasService.getTodasReservas(getUsuarioActual())))
+    reservasService.getTodasReservas()))
   ipcMain.handle('reservas:crear', conManejorDeErrores((_e, libroId) =>
-    reservasService.hacerReserva(libroId, getUsuarioActual())))
+    reservasService.hacerReserva(libroId)))
   ipcMain.handle('reservas:cancelar', conManejorDeErrores((_e, reservaId) =>
-    reservasService.cancelarReserva(reservaId, getUsuarioActual())))
+    reservasService.cancelarReserva(reservaId)))
 
   // multas
   ipcMain.handle('multas:misMultas', conManejorDeErrores(() =>
-    multasService.getMultasByMiembro(getUsuarioActual())))
+    multasService.getMultasByMiembro()))
   ipcMain.handle('multas:listarTodas', conManejorDeErrores(() =>
-    multasService.getTodasMultas(getUsuarioActual())))
+    multasService.getTodasMultas()))
 
   // miembros
   ipcMain.handle('miembros:listar', conManejorDeErrores(() =>
-    miembrosService.listarMiembros(getUsuarioActual())))
+    miembrosService.listarMiembros()))
 }
 
 function createWindow() {
