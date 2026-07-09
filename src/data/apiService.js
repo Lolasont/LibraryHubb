@@ -1,156 +1,258 @@
-// Capa de servicios que habla con el proceso principal de Electron
-// mediante window.libraryHub (expuesto en electron/preload.cjs).
+// Capa de servicios que habla con el backend.
 //
-// Antes este archivo hacia fetch a un backend HTTP. Ahora todas las
-// llamadas son ipcRenderer.invoke(...) ejecutadas dentro del mismo
-// proceso, asi que no hay red, no hay token, no hay URLs.
+// Esta fachada funciona en DOS modos y elige automaticamente:
 //
-// La fachada publica (nombres de funciones exportadas, parametros y
-// tipo de retorno) se mantiene IDENTICA a la version anterior, para
-// que las paginas de React (Login, Libros, LibroDetalle, MiPerfil,
-// MisReservas, Bibliotecario) no necesiten cambios.
+//   - Modo Electron: usa window.libraryHub (expuesto en
+//     electron/preload.cjs). El backend son los services importados
+//     por main.cjs, ejecutandose en el proceso principal de Electron.
+//     Toda la comunicacion es IPC, no hay red.
+//
+//   - Modo web (navegador): usa fetch contra el servidor Express en
+//     http://localhost:3000. La sesion viaja como token en el header
+//     'x-session-token'. Se persiste en localStorage (mismo mecanismo
+//     que el user, asi no hay que tocar AuthContext).
+//
+// Las paginas de React (Login, Libros, LibroDetalle, MiPerfil,
+// MisReservas, Bibliotecario) siguen llamando a las mismas funciones
+// exportadas sin saber en que modo estan. Esa deteccion la hace
+// isElectron() de abajo.
 
-// Acceso a la API expuesta por el preload. window.libraryHub existe
-// siempre dentro de Electron; si por algun motivo no esta (por ejemplo,
-// si se abre la app en un navegador sin preload) lanzamos un error claro
-// al usarlo, en vez de fallar silenciosamente.
-function api() {
-  if (typeof window === 'undefined' || !window.libraryHub) {
-    throw new Error(
-      'window.libraryHub no esta disponible. Esta pagina debe correr dentro de Electron.'
-    )
+// ── Deteccion de entorno ─────────────────────────────────────
+
+// Devuelve true si estamos corriendo dentro de Electron
+// (window.libraryHub esta inyectado por el preload). Devuelve false
+// si estamos en un navegador normal.
+function isElectron() {
+  return typeof window !== 'undefined' && !!window.libraryHub
+}
+
+// Acceso a la API expuesta por el preload. Solo se usa en modo Electron.
+function electronApi() {
+  if (!isElectron()) {
+    throw new Error('window.libraryHub no esta disponible. Esta pagina debe correr dentro de Electron.')
   }
   return window.libraryHub
 }
 
-// Varios canales IPC devuelven una lista en el caso normal, pero un
-// objeto { ok: false, mensaje } cuando algo sale mal (por ejemplo, si la
-// sesion del lado de Electron todavia no se restauro — ver
-// restaurarSesion mas arriba). Las paginas hacen .map() directo sobre el
-// resultado, asi que si llegara a colarse ese objeto de error en vez de
-// un array, la interfaz se rompe con un TypeError poco claro. Esta
-// funcion normaliza cualquier resultado que no sea un array a una lista
-// vacia, para que la pagina simplemente no muestre nada en vez de
-// explotar.
+// ── HTTP helpers (modo web) ─────────────────────────────────
+
+const API_BASE = 'http://localhost:3000/api'
+
+// Lee el token de sesion del localStorage (modo web).
+function getToken() {
+  try { return localStorage.getItem('libraryhub_token') }
+  catch { return null }
+}
+
+function setToken(token) {
+  try {
+    if (token) localStorage.setItem('libraryhub_token', token)
+    else localStorage.removeItem('libraryhub_token')
+  } catch { /* ignore */ }
+}
+
+// Fetch helper. Anade el token al header, parsea JSON, y normaliza
+// respuestas de error a { ok: false, mensaje } para que las paginas
+// no tengan que distinguir entre error HTTP y error logico.
+async function http(path, { method = 'GET', body, query } = {}) {
+  let url = `${API_BASE}${path}`
+  if (query) {
+    const qs = new URLSearchParams()
+    for (const [k, v] of Object.entries(query)) {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, v)
+    }
+    const s = qs.toString()
+    if (s) url += `?${s}`
+  }
+  const token = getToken()
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-session-token': token } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const data = await res.json().catch(() => ({ ok: false, mensaje: 'Respuesta invalida del servidor.' }))
+  if (!res.ok && data.mensaje) {
+    return { ok: false, mensaje: data.mensaje }
+  }
+  return data
+}
+
+// Varios endpoints devuelven una lista en el caso normal, pero un objeto
+// { ok: false, mensaje } cuando algo sale mal. Las paginas hacen .map()
+// directo sobre el resultado, asi que si llegara a colarse ese objeto de
+// error en vez de un array, la UI se rompe. Esta funcion normaliza
+// cualquier resultado que no sea un array a una lista vacia.
 function comoLista(data) {
   return Array.isArray(data) ? data : []
 }
 
-// ─── AUTH ────────────────────────────────────────────────────
+// ── AUTH ─────────────────────────────────────────────────────
 
 /**
  * Autentica un usuario contra el backend.
  * Devuelve { user, token } si las credenciales son validas, o null en
- * caso contrario (mismo contrato que antes, para no tocar Login.jsx).
+ * caso contrario.
  * @returns {Promise<{ user, token } | null>}
  */
 export async function loginUsuario(cedula, password) {
-  const data = await api().login(cedula, password)
-  if (!data || data.ok === false) return null
-  return { user: data.user, token: null }
+  if (isElectron()) {
+    const data = await electronApi().login(cedula, password)
+    if (!data || data.ok === false) return null
+    return { user: data.user, token: null }
+  } else {
+    const data = await http('/auth/login', {
+      method: 'POST',
+      body: { cedula, password },
+    })
+    if (!data || data.ok === false) return null
+    // Guardamos el token para futuras requests.
+    setToken(data.token)
+    return { user: data.user, token: data.token }
+  }
 }
 
 /**
- * Vuelve a avisarle al proceso principal de Electron quien esta logueado,
- * usando el id guardado en localStorage. Hace falta porque la sesion
- * "real" vive en memoria del lado de Electron (no en un token), y esa
- * memoria puede perderse (recarga de la ventana, reinicio) mientras el
+ * Vuelve a avisarle al backend quien esta logueado, usando el id
+ * guardado en localStorage. Hace falta porque la sesion puede haberse
+ * perdido (recarga de la ventana, reinicio del server) mientras el
  * renderer todavia recuerda al usuario.
  * @param {string} userId
  * @returns {Promise<{ ok: boolean, user?: object, mensaje?: string }>}
  */
 export async function restaurarSesion(userId) {
-  return api().restaurarSesion(userId)
+  if (isElectron()) {
+    return electronApi().restaurarSesion(userId)
+  } else {
+    const data = await http('/auth/restaurar-sesion', {
+      method: 'POST',
+      body: { userId },
+    })
+    if (data?.token) setToken(data.token)
+    return data
+  }
 }
 
-// ─── CATEGORIAS ──────────────────────────────────────────────
+/**
+ * Cierra la sesion actual. En modo Electron, por ahora es un no-op
+ * del lado del backend (no hay canal IPC de logout, y el main.cjs
+ * mantiene al usuario en memoria hasta que se reinicia la app). El
+ * frontend limpia localStorage y el contexto en AuthContext. En modo
+ * web, borra el token del localStorage y le avisa al server.
+ */
+export async function logoutUsuario() {
+  if (isElectron()) {
+    return { ok: true }
+  } else {
+    try { await http('/auth/logout', { method: 'POST' }) } catch { /* ignore */ }
+    setToken(null)
+    return { ok: true }
+  }
+}
+
+// ── CATEGORIAS ───────────────────────────────────────────────
 
 export async function getCategorias() {
-  return comoLista(await api().getCategorias())
+  if (isElectron()) return comoLista(await electronApi().getCategorias())
+  return comoLista(await http('/categorias'))
 }
 
-// ─── LIBROS ──────────────────────────────────────────────────
+// ── LIBROS ───────────────────────────────────────────────────
 
 export async function getLibros({ busqueda = '', categoria_id = null } = {}) {
-  return comoLista(await api().getLibros({ busqueda, categoria_id }))
+  if (isElectron()) {
+    return comoLista(await electronApi().getLibros({ busqueda, categoria_id }))
+  }
+  return comoLista(await http('/libros', { query: { busqueda, categoria_id } }))
 }
 
 export async function getLibroById(id) {
-  const data = await api().getLibroById(id)
-  // Mismo contrato que antes: si no se encontro el libro, devuelve null.
+  if (isElectron()) {
+    const data = await electronApi().getLibroById(id)
+    if (data?.ok === false) return null
+    return data
+  }
+  const data = await http(`/libros/${id}`)
   if (data?.ok === false) return null
   return data
 }
 
-// ─── PRESTAMOS ───────────────────────────────────────────────
+// ── PRESTAMOS ────────────────────────────────────────────────
 
 export async function getPrestamosActivos() {
-  return comoLista(await api().getPrestamosActivos())
+  if (isElectron()) return comoLista(await electronApi().getPrestamosActivos())
+  return comoLista(await http('/prestamos/mis-activos'))
 }
 
 export async function getTodosPrestamos() {
-  return comoLista(await api().getTodosPrestamos())
+  if (isElectron()) return comoLista(await electronApi().getTodosPrestamos())
+  return comoLista(await http('/prestamos/todos'))
 }
 
-/**
- * Solicita un prestamo para el usuario autenticado.
- * @param {string} libro_id
- */
 export async function solicitarPrestamo(libro_id) {
-  return api().solicitarPrestamo(libro_id)
+  if (isElectron()) return electronApi().solicitarPrestamo(libro_id)
+  return http('/prestamos/solicitar', { method: 'POST', body: { libro_id } })
 }
 
 export async function renovarPrestamo(prestamo_id) {
-  return api().renovarPrestamo(prestamo_id)
+  if (isElectron()) return electronApi().renovarPrestamo(prestamo_id)
+  return http(`/prestamos/${prestamo_id}/renovar`, { method: 'POST' })
 }
 
 export async function registrarDevolucion(prestamo_id) {
-  return api().registrarDevolucion(prestamo_id)
+  if (isElectron()) return electronApi().registrarDevolucion(prestamo_id)
+  return http(`/prestamos/${prestamo_id}/devolver`, { method: 'POST' })
 }
 
-// ─── RESERVAS ────────────────────────────────────────────────
+// ── RESERVAS ─────────────────────────────────────────────────
 
 export async function getReservasByMiembro() {
-  return comoLista(await api().getReservasByMiembro())
+  if (isElectron()) return comoLista(await electronApi().getReservasByMiembro())
+  return comoLista(await http('/reservas/mis-reservas'))
 }
 
 export async function getReservasByLibro(libro_id) {
-  return comoLista(await api().getReservasByLibro(libro_id))
+  if (isElectron()) return comoLista(await electronApi().getReservasByLibro(libro_id))
+  return comoLista(await http(`/reservas/por-libro/${libro_id}`))
 }
 
 export async function getTodasReservas() {
-  return comoLista(await api().getTodasReservas())
+  if (isElectron()) return comoLista(await electronApi().getTodasReservas())
+  return comoLista(await http('/reservas/todas'))
 }
 
-/**
- * Crea una reserva para el usuario autenticado.
- * @param {string} libro_id
- */
 export async function hacerReserva(libro_id) {
-  return api().hacerReserva(libro_id)
+  if (isElectron()) return electronApi().hacerReserva(libro_id)
+  return http('/reservas', { method: 'POST', body: { libro_id } })
 }
 
 export async function cancelarReserva(reserva_id) {
-  return api().cancelarReserva(reserva_id)
+  if (isElectron()) return electronApi().cancelarReserva(reserva_id)
+  return http(`/reservas/${reserva_id}/cancelar`, { method: 'POST' })
 }
 
-// ─── MULTAS ──────────────────────────────────────────────────
+// ── MULTAS ───────────────────────────────────────────────────
 
 export async function getMultasByMiembro() {
-  return comoLista(await api().getMultasByMiembro())
+  if (isElectron()) return comoLista(await electronApi().getMultasByMiembro())
+  return comoLista(await http('/multas/mis-multas'))
 }
 
 export async function getTodasMultas() {
-  return comoLista(await api().getTodasMultas())
+  if (isElectron()) return comoLista(await electronApi().getTodasMultas())
+  return comoLista(await http('/multas/todas'))
 }
 
-// ─── MIEMBROS (para el bibliotecario) ────────────────────────
+// ── MIEMBROS (para el bibliotecario) ─────────────────────────
 
 export async function getMiembros() {
-  return comoLista(await api().getMiembros())
+  if (isElectron()) return comoLista(await electronApi().getMiembros())
+  return comoLista(await http('/miembros'))
 }
 
-// ─── UTILIDADES (sin cambios — no dependen del backend) ───────
+// ── UTILIDADES (sin cambios — no dependen del backend) ───────
 // getEstadoPrestamo es logica pura (no hace fetch), por eso vive en utils.js
 // junto al resto de los helpers de formato. Se reexporta aqui para que las
 // paginas puedan seguir importandola desde apiService.js sin tocar sus imports.
