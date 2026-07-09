@@ -49,6 +49,7 @@ forma distinta:
 - [Variables de entorno](#variables-de-entorno)
 - [Scripts disponibles](#scripts-disponibles)
 - [Solución de problemas](#solución-de-problemas)
+- [Documentación adicional](#documentación-adicional)
 
 ---
 
@@ -198,6 +199,7 @@ LibraryHub/
 │   │   ├── prestamos.service.js
 │   │   ├── reservas.service.js
 │   │   ├── multas.service.js
+│   │   ├── exchange.service.js     # Conversión a CLP vía API Frankfurter
 │   │   └── miembros.service.js
 │   ├── utils/format.js             # toDate() y helpers de formato
 │   ├── seed.js                     # Carga datos de ejemplo
@@ -326,7 +328,8 @@ completa el formulario automáticamente.
 - Solicitud de préstamos
 - Reserva de libros sin ejemplares disponibles, con posición en la cola
 - Renovación de préstamos (hasta **dos renovaciones** por préstamo)
-- Consulta de multas pendientes
+- Consulta de multas pendientes (convertidas a CLP mediante la API
+  pública Frankfurter)
 - Indicadores visuales de vencimiento (verde, amarillo, rojo)
 
 **Para el bibliotecario**
@@ -454,3 +457,11 @@ automáticamente en modo web.
   `node --watch` reinicia el servidor automáticamente al guardar. Si
   no ocurre, cortá el proceso (`Ctrl+C`) y volvé a correr
   `npm run dev:web`.
+
+---
+
+## Documentación adicional
+
+Para una explicación más detallada de cómo se conecta cada parte del
+proyecto (frontend, backend, Electron, sesión, conversión de moneda,
+etc.), ver [`COMO_FUNCIONA_LIBRARYHUB.md`](./COMO_FUNCIONA_LIBRARYHUB.md).
