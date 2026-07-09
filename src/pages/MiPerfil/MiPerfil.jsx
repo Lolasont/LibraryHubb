@@ -211,14 +211,14 @@ export default function MiPerfil() {
                 {multas.map(multa => (
                   <div key={multa.id} className="bg-white rounded-lg border border-red-200 p-3">
                     <p className="text-xs text-slate-500 mb-1">Prestamo #{multa.prestamo_id}</p>
-                    <p className="text-lg font-bold text-red-600">{formatCLP(multa.monto)}</p>
+                    <p className="text-lg font-bold text-red-600">{formatCLP(multa.monto)} CLP</p>
                   </div>
                 ))}
               </div>
               {multas.length > 1 && (
                 <div className="mt-3 pt-3 border-t border-red-200 flex justify-between items-center">
                   <span className="text-xs text-red-700 font-medium">Total pendiente</span>
-                  <span className="font-bold text-red-700">{formatCLP(totalMultas)}</span>
+                  <span className="font-bold text-red-700">{formatCLP(totalMultas)} CLP</span>
                 </div>
               )}
               <p className="text-xs text-red-500 mt-3">* Acercate a la biblioteca para regularizar tus multas.</p>

@@ -71,7 +71,7 @@ async function http(path, { method = 'GET', body, query } = {}) {
       'Content-Type': 'application/json',
       ...(token ? { 'x-session-token': token } : {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
+    ...(body ? { body: JSON.stringify(body) } : {}),
   })
   const data = await res.json().catch(() => ({ ok: false, mensaje: 'Respuesta invalida del servidor.' }))
   if (!res.ok && data.mensaje) {

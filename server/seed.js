@@ -17,6 +17,7 @@ import Libro     from './models/Libro.js'
 import Prestamo  from './models/Prestamo.js'
 import Reserva   from './models/Reserva.js'
 import Multa     from './models/Multa.js'
+import * as multasService from './services/multas.service.js'
 
 async function seed() {
   await conectarDB()
@@ -100,9 +101,12 @@ async function seed() {
   // 7. Insertamos una multa ya existente para probar la vista correspondiente.
   //    Representa 4 dias de atraso a $1.000 CLP por dia.
   console.log('Insertando multas...')
-  await Multa.insertMany([
-    { prestamo: prestJuan.id, miembro: juan.id, monto: 4000, pagada: false },
-  ])
+  await multasService.crearMulta({
+    prestamoId:   prestJuan.id,
+    miembroId:    juan.id,
+    monto:        4000,
+    monedaOrigen: 'CLP',
+  })
 
   console.log('\nSeed completado exitosamente.')
   console.log('Credenciales de acceso:')

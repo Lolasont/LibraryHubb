@@ -28,7 +28,7 @@ const miembroSchema = new Schema(
     telefono:       { type: String, default: null },
     // Estado de la cuenta. Si esta "suspendido" o "cancelado" no puede entrar.
     estado:         { type: String, enum: ['activo', 'suspendido', 'cancelado'],  default: 'activo' },
-    // Determina si el usuario ve el panel de socio o el panel de bibliotecario.
+    // Determina si el usuario ve el panel de miembro o el panel de bibliotecario.
     rol:            { type: String, enum: ['miembro', 'bibliotecario'],            default: 'miembro' },
     fecha_registro: { type: Date, default: Date.now },
   },

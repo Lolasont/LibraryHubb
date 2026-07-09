@@ -4,7 +4,7 @@
 
 import Prestamo from '../models/Prestamo.js'
 import Libro from '../models/Libro.js'
-import Multa from '../models/Multa.js'
+import * as multasService from './multas.service.js'
 import { requerirSesion, requerirRol } from './sesion.service.js'
 import { toDate } from '../utils/format.js'
 
@@ -169,11 +169,11 @@ export async function registrarDevolucion(prestamoId) {
   if (hoy > venc) {
     const diasAtraso = Math.ceil((hoy - venc) / (1000 * 60 * 60 * 24))
     const monto      = diasAtraso * 1000
-    await Multa.create({
-      prestamo: prestamo._id,
-      miembro:  prestamo.miembro,
+    await multasService.crearMulta({
+      prestamoId:   prestamo._id,
+      miembroId:    prestamo.miembro,
       monto,
-      pagada:   false,
+      monedaOrigen: 'CLP',
     })
   }
 

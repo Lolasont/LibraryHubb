@@ -4,6 +4,7 @@
 import Multa from '../models/Multa.js'
 import { requerirSesion, requerirRol } from './sesion.service.js'
 import { toDate } from '../utils/format.js'
+import * as exchange from './exchange.service.js'
 
 function formatMulta(m) {
   return {
@@ -39,4 +40,34 @@ export async function getTodasMultas() {
     .sort({ createdAt: -1 })
 
   return multas.map(formatMulta)
+}
+
+/**
+ * Crea una multa, convirtiendo el monto a la moneda local (CLP) si es que
+ * viene en otra moneda. Si la conversion falla (por ejemplo, sin conexion
+ * a internet), se persiste igual asumiendo que el monto ya esta en CLP.
+ * @param {{prestamoId:string, miembroId:string, monto:number, monedaOrigen?:string}} datos
+ * @returns {Promise<object>} La multa creada, con el formato estandar.
+ */
+export async function crearMulta({ prestamoId, miembroId, monto, monedaOrigen = 'CLP' }) {
+  const resultado = await exchange.convertirAmonedaLocal(monto, monedaOrigen)
+
+  let montoFinal = monto
+  if (resultado.ok) {
+    montoFinal = resultado.monto
+    if (monedaOrigen !== 'CLP') {
+      console.log(`[exchange] ${monto} ${monedaOrigen} -> ${montoFinal} CLP`)
+    }
+  } else {
+    console.warn(`[exchange] No se pudo convertir ${monto} ${monedaOrigen} a CLP: ${resultado.error}. Se asume monto en CLP.`)
+  }
+
+  const multa = await Multa.create({
+    prestamo: prestamoId,
+    miembro:  miembroId,
+    monto:    montoFinal,
+    pagada:   false,
+  })
+
+  return formatMulta(multa)
 }
