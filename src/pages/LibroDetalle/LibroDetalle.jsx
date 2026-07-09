@@ -133,7 +133,7 @@ export default function LibroDetalle() {
             <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1">Ficha tecnica</h2>
             <div className="mt-2">
               <DetalleRow label="Editorial"     value={libro.editorial} />
-              <DetalleRow label="Ano"           value={libro.año_publicacion} />
+              <DetalleRow label="Año"           value={libro.año_publicacion} />
               <DetalleRow label="Paginas"       value={libro.paginas ? `${libro.paginas} paginas` : null} />
               <DetalleRow label="ISBN"          value={libro.isbn} />
               <DetalleRow label="Categoria"     value={libro.categoria} />
